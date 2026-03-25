@@ -152,7 +152,7 @@ def hr_results():
     if session.get('role') != 'hr':
         return redirect(url_for('login'))
 
-    # We use coalesce to treat NULL as 0, and sort by score DESC
+    # 1. Existing Results Query
     results = db.session.query(
         Candidate.name,
         Candidate.department,
@@ -160,17 +160,93 @@ def hr_results():
         func.count(Score.id).label('judge_count')
     ).join(Score, isouter=True).group_by(Candidate.id).order_by(func.avg(Score.total_score).desc().nullslast()).all()
 
-    # Check if ANY votes have been cast at all
-    has_votes = any(r[3] > 0 for r in results)
+    # 2. NEW: Fetch all Candidates and Judges for the Roster view
+    all_candidates = Candidate.query.order_by(Candidate.name).all()
+    all_judges = Judge.query.order_by(Judge.name).all()
 
-    return render_template('hr_results.html', results=results, has_votes=has_votes)
-
+    return render_template('hr_results.html',
+                           results=results,
+                           all_candidates=all_candidates,
+                           all_judges=all_judges)
 
 # 5. Logout
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+
+# --- HR MANAGEMENT: ADD CANDIDATE ---
+@app.route('/hr/add-candidate', methods=['GET', 'POST'])
+def add_candidate():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        new_can = Candidate(name=request.form['name'], department=request.form['dept'])
+        db.session.add(new_can)
+        db.session.commit()
+        flash("Candidate Added!")
+        return redirect(url_for('hr_results'))
+    return render_template('add_candidate.html')
+
+
+# --- HR MANAGEMENT: ADD JUDGE ---
+@app.route('/hr/add-judge', methods=['GET', 'POST'])
+def add_judge():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        new_judge = Judge(name=request.form['name'])
+        db.session.add(new_judge)
+        db.session.commit()
+        flash("Judge Added!")
+        return redirect(url_for('hr_results'))
+    return render_template('add_judge.html')
+
+
+# --- HR MANAGEMENT: WIPE ALL VOTES ---
+# --- HR MANAGEMENT: WIPE ALL VOTES WITH PASSWORD ---
+@app.route('/hr/wipe-scores', methods=['POST'])
+def wipe_scores():
+    if session.get('role') != 'hr':
+        return redirect(url_for('login'))
+
+    # 1. Get password from the form
+    entered_password = request.form.get('wipe_password')
+
+    # 2. Verify password
+    if entered_password == 'hr@55':
+        try:
+            # Delete all rows in the Score table
+            db.session.query(Score).delete()
+            db.session.commit()
+            flash("SUCCESS: All votes have been permanently cleared.", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Database Error: {str(e)}", "danger")
+    else:
+        flash("ACCESS DENIED: Incorrect Wipe Password!", "danger")
+
+    return redirect(url_for('hr_results'))
+
+@app.route('/hr/delete-candidate/<int:id>', methods=['POST'])
+def delete_candidate(id):
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    can = Candidate.query.get_or_404(id)
+    db.session.delete(can)
+    db.session.commit()
+    flash(f"Candidate {can.name} removed.")
+    return redirect(url_for('hr_results'))
+
+@app.route('/hr/delete-judge/<int:id>', methods=['POST'])
+def delete_judge(id):
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    judge = Judge.query.get_or_404(id)
+    db.session.delete(judge)
+    db.session.commit()
+    flash(f"Judge {judge.name} removed.")
+    return redirect(url_for('hr_results'))
+
 
 
 if __name__ == '__main__':
