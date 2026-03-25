@@ -1,0 +1,207 @@
+{% extends 'layout.html' %}
+{% block content %}
+<style>
+    /* 🚀 UNLOCK SCROLL FOR THIS PAGE */
+    html, body {
+        overflow: auto !important;
+        height: auto !important;
+    }
+
+    .bento-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 30px;
+        padding: 30px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
+    }
+
+    .winner-card {
+        border: 3px solid var(--pageant-gold) !important;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 253, 230, 0.9) 100%) !important;
+        box-shadow: 0 25px 50px rgba(212, 175, 55, 0.2) !important;
+    }
+
+    .rank-seal {
+        width: 45px;
+        height: 45px;
+        background: #1d1d1f;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        margin-bottom: 15px;
+    }
+
+    .rank-seal-gold { background: var(--pageant-gold) !important; }
+
+    .score-giant {
+        font-size: clamp(2.5rem, 5vw, 3.5rem);
+        font-weight: 900;
+        color: #1d1d1f;
+        letter-spacing: -2px;
+    }
+
+    .score-giant small { font-size: 1.2rem; color: var(--pageant-gold); }
+
+    .crown-svg {
+        width: 70px;
+        height: 70px;
+        filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.6));
+        animation: float 3s ease-in-out infinite;
+        margin-bottom: 15px;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    }
+</style>
+
+<div class="container py-5">
+
+    <!-- Header -->
+    <div class="row align-items-center mb-5 g-3 text-center text-md-start">
+        <div class="col-12 col-md-8">
+            <h1 style="font-weight: 900; letter-spacing: -1.5px;">HR Results Dashboard</h1>
+            <div class="d-flex justify-content-center justify-content-md-start align-items-center gap-2">
+                <span class="badge bg-success rounded-pill px-3 py-2">LIVE DATA</span>
+                <span class="text-muted small fw-bold">BB-2026 OFFICIAL</span>
+            </div>
+        </div>
+        <div class="col-12 col-md-4 text-md-end">
+            <a href="/logout" class="btn btn-outline-danger rounded-pill px-4 fw-bold">EXIT</a>
+        </div>
+    </div>
+
+    {% if results %}
+        <!-- TOP 3 PODIUM -->
+        <!-- Add this button at the top of the results -->
+<div class="text-center mb-5">
+    <button id="revealBtn" class="btn btn-dark btn-lg rounded-pill px-5 shadow-lg">
+        <i class="fas fa-crown me-2 text-warning"></i> REVEAL TOP 3 WINNERS
+    </button>
+</div>
+
+<!-- Add these styles to your <style> section -->
+<style>
+    .podium-slot {
+        opacity: 0;
+        transform: translateY(50px);
+        transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .reveal-active .podium-slot:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 0.5s; } /* 3rd Place */
+    .reveal-active .podium-slot:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 2.5s; } /* 2nd Place */
+    .reveal-active .podium-slot:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 5s; }   /* 1st Place! */
+
+    /* Animation for the Grand Winner */
+    .reveal-active .podium-slot:nth-child(1) .winner-card {
+        animation: winnerGlow 2s infinite alternate;
+    }
+    @keyframes winnerGlow {
+        from { box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
+        to { box-shadow: 0 0 50px rgba(212, 175, 55, 0.8); }
+    }
+</style>
+
+<!-- Update your Podium Loop to add the slot classes -->
+<div class="row g-4 mb-5 justify-content-center" id="podiumContainer">
+    {% for name, dept, avg, count in results[:3] %}
+        <!-- We reverse the display order visually so 1st is in the middle if you like,
+             but here we keep it simple for the animation -->
+        <div class="col-12 col-md-4 podium-slot">
+            <!-- Your existing bento-card code here -->
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Script for the reveal -->
+<script>
+    document.getElementById('revealBtn').addEventListener('click', function() {
+        document.getElementById('podiumContainer').classList.add('reveal-active');
+        this.innerHTML = "🏆 TABULATION FINALIZED";
+        this.disabled = true;
+
+        // Play a sound if you want!
+        // var audio = new Audio('fanfare.mp3'); audio.play();
+    });
+</script>
+
+        <div class="row g-4 mb-5 justify-content-center">
+            {% for name, dept, avg, count in results[:3] %}
+                <div class="col-12 col-md-4">
+                    <div class="bento-card h-100 text-center {% if loop.index == 1 %}winner-card{% endif %}">
+                        <div class="d-flex justify-content-center">
+                            <div class="rank-seal {% if loop.index == 1 %}rank-seal-gold{% endif %}">{{ loop.index }}</div>
+                        </div>
+
+                        {% if loop.index == 1 %}
+                        <svg class="crown-svg" viewBox="0 0 24 24"><path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5Z" fill="#D4AF37"/><path d="M5 18H19V19C19 19.5523 18.5523 20 18 20H6C5.44772 20 5 19.5523 5 19V18Z" fill="#D4AF37"/></svg>
+                        {% endif %}
+
+                        <h3 class="fw-bold mb-1">{{ name }}</h3>
+                        <p class="text-muted small fw-bold text-uppercase">{{ dept }}</p>
+
+                        <div class="score-giant">
+                            <!-- FIX: Use (avg or 0) to prevent NoneType Error -->
+                            {{ "%.2f"|format(avg or 0) }}<small>%</small>
+                        </div>
+
+                        <div class="mt-2 small fw-bold opacity-50">{{ count }} BALLOTS</div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- FULL TABLE -->
+        <div class="table-container mb-5">
+            <div class="table-responsive">
+                <table class="table mb-0 align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Rank</th>
+                            <th>Candidate</th>
+                            <th class="text-center">Votes</th>
+                            <th class="text-end pe-4">Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for name, dept, avg, count in results %}
+                        <tr>
+                            <td class="ps-4 fw-bold">#{{ loop.index }}</td>
+                            <td>
+                                <div class="fw-bold">{{ name }}</div>
+                                <div class="text-muted small">{{ dept }}</div>
+                            </td>
+                            <td class="text-center"><span class="badge bg-light text-dark border">{{ count }}</span></td>
+                            <td class="text-end pe-4 fw-900 fs-5">
+                                <!-- FIX: Use (avg or 0) here as well -->
+                                {{ "%.2f"|format(avg or 0) }}%
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="bento-card text-center p-5">
+            <h3>No results available yet.</h3>
+        </div>
+    {% endif %}
+
+</div>
+
+<script>setTimeout(function(){ location.reload(); }, 15000);</script>
+{% endblock %}

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Binibining Coolaire 2026</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --pageant-gold: #D4AF37;
+            --text-main: #1d1d1f;
+            --subtle-gray: #86868b;
+        }
+
+        /* Lock the page to exactly the screen height */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Disables all scrolling */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fbfbfd;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(212, 175, 55, 0.04) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(0, 122, 255, 0.04) 0px, transparent 50%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Spreads Header, Content, Footer apart */
+        }
+
+        /* 1. Header Section - Scaled for No-Scroll */
+        header {
+            padding-top: clamp(20px, 5vh, 60px);
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .brand-logo-large {
+            width: clamp(100px, 15vh, 160px); /* Height-based scaling */
+            height: auto;
+            filter: drop-shadow(0 8px 20px rgba(212, 175, 55, 0.2));
+            margin-bottom: 10px;
+            animation: logoFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .brand-title {
+            font-weight: 900;
+            font-size: clamp(1.2rem, 5vh, 1.8rem);
+            letter-spacing: -1px;
+            text-transform: uppercase;
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        .brand-subtitle {
+            font-weight: 600;
+            letter-spacing: 4px;
+            color: var(--pageant-gold);
+            font-size: clamp(1.2rem, 5vh, 1.8rem);
+            margin-top: 2px;
+        }
+
+        /* 2. Content Section - Perfectly Centered */
+        main {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        /* 3. Footer Section - Fixed at Bottom */
+        footer {
+            padding-bottom: clamp(15px, 4vh, 40px);
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .footer-divider {
+            width: 30px;
+            height: 2px;
+            background: var(--pageant-gold);
+            margin: 0 auto 12px;
+            opacity: 0.5;
+        }
+
+        .it-dept-credit {
+            font-size: 0.65rem;
+            letter-spacing: 2.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--subtle-gray);
+            margin: 0;
+        }
+
+        .it-dept-credit span {
+            color: var(--text-main);
+        }
+
+        /* Mobile specific adjustments to ensure no overflow */
+        @media (max-height: 600px) {
+            header { padding-top: 10px; }
+            .brand-logo-large { margin-bottom: 5px; }
+            footer { padding-bottom: 10px; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="fade-in">
+        <a href="/">
+            <img src="{{ url_for('static', filename='logo.png') }}"
+                 alt="Logo"
+                 class="brand-logo-large"
+                 onerror="this.src='https://cdn-icons-png.flaticon.com/512/261/261957.png'">
+        </a>
+        <h1 class="brand-title">Binibining Coolaire</h1>
+        <p class="brand-subtitle">2026</p>
+        <p class="it-dept-credit">Created by : <span>IT Department</span></p>
+
+    </header>
+
+    <!-- Content -->
+    <main class="fade-in">
+        <!-- The login card from login.html scales automatically inside here -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-divider"></div>
+        <p style="font-size: 0.55rem; color: #b0b0b5; margin-top: 4px;">&copy; 2026 Binibining Coolaire Foundation</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

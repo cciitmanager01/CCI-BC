@@ -1,0 +1,286 @@
+{% extends 'layout.html' %}
+{% block content %}
+<style>
+    /* 🚀 UNLOCK SCROLL FOR BALLOT PAGE */
+    html, body {
+        overflow: auto !important;
+        height: auto !important;
+    }
+
+    /* Premium Sticky Ballot Header */
+    .sticky-ballot-header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        margin: -40px -20px 30px -20px;
+        padding: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    }
+
+    .ballot-candidate-name {
+        font-weight: 900;
+        font-size: clamp(1.4rem, 4vw, 2.2rem);
+        letter-spacing: -1px;
+        color: #1d1d1f;
+        margin: 0;
+    }
+
+    /* Criterion Bento Card */
+    .criterion-card {
+        background: white;
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 30px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        position: relative;
+    }
+
+    .criterion-label {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #1d1d1f;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .criterion-desc {
+        font-size: 0.9rem;
+        color: #86868b;
+        line-height: 1.4;
+        margin-bottom: 20px;
+    }
+
+    /* Massive Number Display */
+    .score-display {
+        background: #f5f5f7;
+        border-radius: 20px;
+        padding: 10px 20px;
+        text-align: center;
+        min-width: 100px;
+    }
+
+    .huge-number {
+        font-size: 3rem;
+        font-weight: 900;
+        color: #007AFF; /* Coolaire Blue */
+        line-height: 1;
+        display: block;
+    }
+
+    .max-label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: var(--pageant-gold);
+        letter-spacing: 1px;
+    }
+
+    /* High-Impact Slider */
+    .premium-range {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 12px;
+        background: #e5e5ea;
+        border-radius: 10px;
+        outline: none;
+        margin-top: 20px;
+    }
+
+    .premium-range::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 40px;
+        height: 40px;
+        background: #007AFF;
+        border: 4px solid white;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+    }
+
+    /* 🔥 THE BUSSIN SUBMIT BUTTON (NO WHITE) */
+    .btn-submit-ballot {
+        background: #007AFF; /* Solid Coolaire Blue */
+        color: white !important;
+        border: none;
+        width: 100%;
+        padding: 22px;
+        border-radius: 24px;
+        font-weight: 900;
+        font-size: 1.2rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        box-shadow: 0 15px 35px rgba(0, 122, 255, 0.3);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        margin-top: 20px;
+    }
+
+    .btn-submit-ballot:hover {
+        background: #0062cc;
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 122, 255, 0.4);
+    }
+
+    .btn-submit-ballot:active {
+        transform: scale(0.98);
+    }
+
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 25px;
+        color: #86868b;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+</style>
+
+<div class="container pb-5">
+
+    <!-- Sticky Header -->
+    <div class="sticky-ballot-header">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div>
+                <span class="max-label">BALLOT FOR:</span>
+                <h1 class="ballot-candidate-name">{{ can.name }}</h1>
+                <span class="badge rounded-pill bg-light text-dark border mt-1">{{ can.department }}</span>
+            </div>
+            <div class="text-end d-none d-sm-block">
+                <span class="max-label">JUDGE</span>
+                <div class="fw-bold" style="color: #1d1d1f;">{{ session.judge_name }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scoring System Overview -->
+    <div class="alert alert-info rounded-4 border-0 shadow-sm mb-4" style="background: rgba(0,122,255,0.05);">
+        <h6 class="fw-bold mb-1"><i class="fas fa-calculator me-2"></i>Scoring System</h6>
+        <p class="small mb-0 text-muted">
+            Total Score is 100%:
+
+            <strong>25%</strong> Department Representation | <strong>25%</strong> Self-Introduction / Communication |
+            <strong>20%</strong> Creativity & Costume / Presentation | <strong>15%</strong> Confidence & Stage Presence | <strong>15%</strong> Overall Impact / Inspiration.
+        </p>
+    </div>
+
+    <form method="POST" id="ballotForm">
+
+        <!-- Criterion 1 -->
+        <div class="criterion-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div style="flex: 1;">
+                    <label class="criterion-label">1. Dept. Representation</label>
+                    <p class="criterion-desc">How effectively she embodies her department's unique identity and strength.</p>
+                </div>
+                <div class="score-display ms-3">
+                    <span class="huge-number" id="val1">{{ "%.1f"|format(existing_score.dept_rep if existing_score else 12.5) }}</span>
+                    <span class="max-label">MAX: 25</span>
+                </div>
+            </div>
+            <input type="range" name="c1" class="premium-range" min="0" max="25" step="0.5"
+                   value="{{ existing_score.dept_rep if existing_score else 12.5 }}"
+                   oninput="document.getElementById('val1').innerText = parseFloat(this.value).toFixed(1)">
+        </div>
+
+        <!-- Criterion 2 -->
+        <div class="criterion-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div style="flex: 1;">
+                    <label class="criterion-label">2. Intro & Communication</label>
+                    <p class="criterion-desc">Clarity of self-introduction, confidence, and charisma in speech delivery.</p>
+                </div>
+                <div class="score-display ms-3">
+                    <span class="huge-number" id="val2">{{ "%.1f"|format(existing_score.comm_skills if existing_score else 12.5) }}</span>
+                    <span class="max-label">MAX: 25</span>
+                </div>
+            </div>
+            <input type="range" name="c2" class="premium-range" min="0" max="25" step="0.5"
+                   value="{{ existing_score.comm_skills if existing_score else 12.5 }}"
+                   oninput="document.getElementById('val2').innerText = parseFloat(this.value).toFixed(1)">
+        </div>
+
+        <!-- Criterion 3 -->
+        <div class="criterion-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div style="flex: 1;">
+                    <label class="criterion-label">3. Creativity & Presentation</label>
+                    <p class="criterion-desc">Originality of costume and overall alignment with the departmental theme.</p>
+                </div>
+                <div class="score-display ms-3">
+                    <span class="huge-number" id="val3">{{ "%.1f"|format(existing_score.creativity if existing_score else 10.0) }}</span>
+                    <span class="max-label">MAX: 20</span>
+                </div>
+            </div>
+            <input type="range" name="c3" class="premium-range" min="0" max="20" step="0.5"
+                   value="{{ existing_score.creativity if existing_score else 10.0 }}"
+                   oninput="document.getElementById('val3').innerText = parseFloat(this.value).toFixed(1)">
+        </div>
+
+        <!-- Criterion 4 -->
+        <div class="criterion-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div style="flex: 1;">
+                    <label class="criterion-label">4. Confidence & Stage Presence</label>
+                    <p class="criterion-desc">Poise, elegance, and energy while navigating the stage.</p>
+                </div>
+                <div class="score-display ms-3">
+                    <span class="huge-number" id="val4">{{ "%.1f"|format(existing_score.confidence if existing_score else 7.5) }}</span>
+                    <span class="max-label">MAX: 15</span>
+                </div>
+            </div>
+            <input type="range" name="c4" class="premium-range" min="0" max="15" step="0.5"
+                   value="{{ existing_score.confidence if existing_score else 7.5 }}"
+                   oninput="document.getElementById('val4').innerText = parseFloat(this.value).toFixed(1)">
+        </div>
+
+        <!-- Criterion 5 -->
+        <div class="criterion-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div style="flex: 1;">
+                    <label class="criterion-label">5. Overall Impact & Inspiration</label>
+                    <p class="criterion-desc">Final impression, power to inspire, and general grace under pressure.</p>
+                </div>
+                <div class="score-display ms-3">
+                    <span class="huge-number" id="val5">{{ "%.1f"|format(existing_score.impact if existing_score else 7.5) }}</span>
+                    <span class="max-label">MAX: 15</span>
+                </div>
+            </div>
+            <input type="range" name="c5" class="premium-range" min="0" max="15" step="0.5"
+                   value="{{ existing_score.impact if existing_score else 7.5 }}"
+                   oninput="document.getElementById('val5').innerText = parseFloat(this.value).toFixed(1)">
+        </div>
+
+        <!-- Premium Solid Blue Submit Button -->
+        <button type="submit" class="btn-submit-ballot" id="submitBtn">
+            {% if existing_score %}
+                <i class="fas fa-sync-alt me-2"></i> Update Official Vote
+            {% else %}
+                <i class="fas fa-check-circle me-2"></i> Submit Official Ballot
+            {% endif %}
+        </button>
+
+        <a href="{{ url_for('judge_index') }}" class="back-link">
+            <i class="fas fa-chevron-left me-1"></i> Return to Candidate Gallery
+        </a>
+
+    </form>
+</div>
+
+<script>
+    const form = document.getElementById('ballotForm');
+    const btn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', () => {
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> RECORDING VOTE...';
+        btn.style.opacity = '0.8';
+        btn.style.pointerEvents = 'none';
+    });
+</script>
+
+{% endblock %}

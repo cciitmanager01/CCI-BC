@@ -1,0 +1,227 @@
+{% extends 'layout.html' %}
+{% block content %}
+<style>
+    /* 🚀 UNLOCK SCROLL FOR GALLERY */
+    html, body {
+        overflow: auto !important;
+        height: auto !important;
+    }
+
+    /* Premium Sticky Progress Bar */
+    .sticky-progress {
+        position: sticky;
+        top: 0; /* Changed to 0 for better mobile sticking */
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 15px 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #1d1d1f;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: var(--pageant-gold);
+        text-transform: uppercase;
+    }
+
+    /* Candidate Bento Cards */
+    .candidate-card {
+        background: white;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 28px;
+        padding: 25px 20px;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        height: 100%;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.04);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .candidate-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    }
+
+    .voted-card {
+        border: 2px solid #28a745 !important;
+        background: linear-gradient(135deg, #ffffff 0%, #f0fff4 100%) !important;
+    }
+
+    /* Initial Circle/Avatar */
+    .avatar-circle {
+        width: 75px;
+        height: 75px;
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        font-weight: 900;
+        background: #f5f5f7;
+        color: #1d1d1f;
+    }
+
+    .voted-avatar {
+        background: #28a745 !important;
+        color: white !important;
+    }
+
+    .candidate-name {
+        font-weight: 800;
+        font-size: 1.2rem;
+        color: #1d1d1f;
+        margin-bottom: 4px;
+        letter-spacing: -0.5px;
+    }
+
+    .dept-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #86868b;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 20px;
+    }
+
+    /* 🔥 FIXED SOLID BUTTONS (No White Background) */
+    .btn-judge {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        border-radius: 16px;
+        font-weight: 800;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    /* Enter Ballot - Solid Blue */
+    .btn-score {
+        background-color: #007AFF; /* Solid Apple Blue */
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+    }
+
+    .btn-score:hover {
+        background-color: #0062cc;
+        transform: scale(1.02);
+    }
+
+    /* Modify Score - Green Outline */
+    .btn-modify {
+        background-color: transparent;
+        border: 2px solid #28a745;
+        color: #28a745 !important;
+    }
+
+    .btn-modify:hover {
+        background-color: #28a745;
+        color: white !important;
+    }
+
+    /* Status Pill */
+    .status-badge {
+        font-size: 0.6rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    /* Mobile Responsive Fixes */
+    @media (max-width: 576px) {
+        .container { padding-left: 15px; padding-right: 15px; }
+        .brand-logo-large { width: 120px; }
+    }
+</style>
+
+<!-- Sticky Progress Header -->
+<div class="sticky-progress">
+    <div>
+        <span class="stat-label" style="color: #007AFF;">Live Ballot</span>
+        <h5 class="mb-0 fw-bold">Judging Panel</h5>
+    </div>
+    <div class="text-end">
+        <div class="stat-number">
+            {{ voted_map|length }}<span class="text-muted fs-6">/{{ candidates|length }}</span>
+        </div>
+        <span class="stat-label">Voted</span>
+    </div>
+</div>
+
+<div class="container pb-5">
+
+    <!-- Candidate Grid -->
+    <div class="row g-4">
+        {% for can in candidates %}
+        {% set score = voted_map.get(can.id) %}
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="candidate-card {% if score %} voted-card {% endif %}">
+
+                <div>
+                    <div class="avatar-circle {% if score %} voted-avatar {% endif %}">
+                        {% if score %}<i class="fas fa-check"></i>{% else %}{{ can.name[0] }}{% endif %}
+                    </div>
+
+                    <span class="status-badge {% if score %}text-success{% else %}text-muted{% endif %}">
+                        {% if score %} BALLOT RECORDED {% else %} PENDING ENTRY {% endif %}
+                    </span>
+
+                    <h3 class="candidate-name">{{ can.name }}</h3>
+                    <p class="dept-label">{{ can.department }}</p>
+                </div>
+
+                <div>
+                    {% if score %}
+                        <div class="mb-3">
+                            <span class="h4 fw-bold text-success">{{ "%.1f"|format(score) }}%</span>
+                        </div>
+                        <a href="{{ url_for('score_page', can_id=can.id) }}" class="btn-judge btn-modify">
+                            Edit Rating
+                        </a>
+                    {% else %}
+                        <div style="height: 38px;"></div> <!-- Alignment Spacer -->
+                        <a href="{{ url_for('score_page', can_id=can.id) }}" class="btn-judge btn-score">
+                            Enter Official Score
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- IT Help Section -->
+    <div class="text-center mt-5">
+        <div class="d-inline-flex align-items-center gap-2 px-4 py-2 bg-white rounded-pill shadow-sm border">
+            <i class="fas fa-info-circle text-primary"></i>
+            <span class="small fw-bold text-muted">Technical difficulties? Contact the <span class="text-dark">IT Committee</span> table.</span>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
