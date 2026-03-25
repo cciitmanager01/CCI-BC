@@ -147,27 +147,7 @@ def score_page(can_id):
 
 
 # 4. HR Side: Results & Leaderboard
-@app.route('/hr-results')
-def hr_results():
-    if session.get('role') != 'hr':
-        return redirect(url_for('login'))
 
-    # 1. Existing Results Query
-    results = db.session.query(
-        Candidate.name,
-        Candidate.department,
-        func.avg(Score.total_score).label('avg_score'),
-        func.count(Score.id).label('judge_count')
-    ).join(Score, isouter=True).group_by(Candidate.id).order_by(func.avg(Score.total_score).desc().nullslast()).all()
-
-    # 2. NEW: Fetch all Candidates and Judges for the Roster view
-    all_candidates = Candidate.query.order_by(Candidate.name).all()
-    all_judges = Judge.query.order_by(Judge.name).all()
-
-    return render_template('hr_results.html',
-                           results=results,
-                           all_candidates=all_candidates,
-                           all_judges=all_judges)
 
 # 5. Logout
 @app.route('/logout')
@@ -248,6 +228,77 @@ def delete_judge(id):
     return redirect(url_for('hr_results'))
 
 
+# --- ADD TO MODELS ---
+class EmployeeVote(db.Model):
+    __tablename__ = 'hr_employee_votes'
+    id = db.Column(db.Integer, primary_key=True)
+    candidate_id = db.Column(db.Integer, db.ForeignKey('hr_candidates.id'))
+    employee_id = db.Column(db.String(50), unique=True, nullable=False)
+
+
+# --- ADD NEW POLL ROUTE ---
+@app.route('/poll', methods=['GET', 'POST'])
+def employee_poll():
+    if request.method == 'POST':
+        emp_id = request.form.get('employee_id').strip().upper()
+        can_id = request.form.get('candidate_id')
+
+        # Check for duplicate
+        existing = EmployeeVote.query.filter_by(employee_id=emp_id).first()
+        if existing:
+            flash(f"Error: Employee ID {emp_id} has already voted!")
+            return redirect(url_for('employee_poll'))
+
+        try:
+            new_vote = EmployeeVote(candidate_id=can_id, employee_id=emp_id)
+            db.session.add(new_vote)
+            db.session.commit()
+            return render_template('poll_success.html')
+        except:
+            db.session.rollback()
+            flash("System Error. Please try again.")
+
+    candidates = Candidate.query.all()
+    return render_template('employee_poll.html', candidates=candidates)
+
+
+# --- UPDATE HR_RESULTS QUERY ---
+@app.route('/hr-results')
+def hr_results():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+
+    # Logic: Judge Score (Avg) * 0.9 + (Employee Poll Score)
+    # For the poll score: We calculate percentage of total employee votes
+    total_emp_votes = db.session.query(func.count(EmployeeVote.id)).scalar() or 1
+
+    results = db.session.query(
+        Candidate.name,
+        Candidate.department,
+        func.avg(Score.total_score).label('judge_avg'),
+        func.count(Score.id).label('judge_count'),
+        func.count(EmployeeVote.id).label('poll_count')
+    ).join(Score, isouter=True).join(EmployeeVote, isouter=True).group_by(Candidate.id).all()
+
+    # Process Final Weighted Score: (Judge Avg * 0.9) + ((Poll Count / Total Votes) * 100 * 0.1)
+    processed_results = []
+    for r in results:
+        j_avg = r[2] or 0
+        poll_points = (r[4] / total_emp_votes) * 100
+        final_score = (j_avg * 0.9) + (poll_points * 0.1)
+        processed_results.append({
+            'name': r[0], 'dept': r[1], 'judge_avg': j_avg,
+            'poll_count': r[4], 'final_score': final_score, 'judge_count': r[3]
+        })
+
+    # Sort by final score
+    processed_results.sort(key=lambda x: x['final_score'], reverse=True)
+
+    all_candidates = Candidate.query.order_by(Candidate.name).all()
+    all_judges = Judge.query.order_by(Judge.name).all()
+
+    return render_template('hr_results.html', results=processed_results,
+                           all_candidates=all_candidates, all_judges=all_judges,
+                           total_emp_votes=total_emp_votes)
 
 if __name__ == '__main__':
     # Using port 8080 for Replit compatibility, change to 5000 if using PyCharm
