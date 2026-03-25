@@ -25,41 +25,21 @@
     }
 
     .rank-seal {
-        width: 45px;
-        height: 45px;
-        background: #1d1d1f;
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 800;
-        margin-bottom: 15px;
+        width: 45px; height: 45px;
+        background: #1d1d1f; color: white;
+        border-radius: 50%; display: flex;
+        align-items: center; justify-content: center;
+        font-weight: 800; margin-bottom: 15px;
     }
 
     .rank-seal-gold { background: var(--pageant-gold) !important; }
 
     .score-giant {
         font-size: clamp(2.5rem, 5vw, 3.5rem);
-        font-weight: 900;
-        color: #1d1d1f;
-        letter-spacing: -2px;
+        font-weight: 900; color: #1d1d1f; letter-spacing: -2px;
     }
 
     .score-giant small { font-size: 1.2rem; color: var(--pageant-gold); }
-
-    .crown-svg {
-        width: 70px;
-        height: 70px;
-        filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.6));
-        animation: float 3s ease-in-out infinite;
-        margin-bottom: 15px;
-    }
-
-    @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
-    }
 
     .table-container {
         background: white;
@@ -67,105 +47,84 @@
         overflow: hidden;
         box-shadow: 0 10px 30px rgba(0,0,0,0.03);
     }
+
+    /* REVEAL ANIMATION */
+    .podium-slot {
+        opacity: 0; transform: translateY(50px);
+        transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .reveal-active .podium-slot:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 0.5s; }
+    .reveal-active .podium-slot:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 2.5s; }
+    .reveal-active .podium-slot:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 5s; }
+
+    /* 🔥 MODAL CLICK FIX: NO BACKDROP LAYER */
+    .modal-backdrop { display: none !important; }
+    .modal {
+        background: rgba(0, 0, 0, 0.3); /* Slight dim instead of a blocking backdrop */
+        z-index: 9999 !important;
+    }
+    .modal-dialog { z-index: 10000 !important; }
 </style>
 
 <div class="container py-5">
 
-    <!-- Header -->
-    <div class="row align-items-center mb-5 g-3 text-center text-md-start">
+    <!-- 1. HEADER SECTION -->
+    <div class="row align-items-center mb-4 g-3 text-center text-md-start">
         <div class="col-12 col-md-8">
-            <h1 style="font-weight: 900; letter-spacing: -1.5px;">HR Results Dashboard</h1>
-            <div class="d-flex justify-content-center justify-content-md-start align-items-center gap-2">
+            <h1 style="font-weight: 900; letter-spacing: -1.5px; margin: 0;">HR Results Dashboard</h1>
+            <div class="d-flex justify-content-center justify-content-md-start align-items-center gap-2 mt-2">
                 <span class="badge bg-success rounded-pill px-3 py-2">LIVE DATA</span>
                 <span class="text-muted small fw-bold">BB-2026 OFFICIAL</span>
             </div>
         </div>
         <div class="col-12 col-md-4 text-md-end">
-            <a href="/logout" class="btn btn-outline-danger rounded-pill px-4 fw-bold">EXIT</a>
+            <a href="/logout" class="btn btn-outline-danger rounded-pill px-4 fw-bold shadow-sm">EXIT</a>
+        </div>
+    </div>
+
+    <!-- 2. MANAGEMENT TOOLS -->
+    <div class="row g-3 mb-5 align-items-center bg-white p-3 rounded-4 shadow-sm mx-0">
+        <div class="col-12 col-md-8 d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+            <a href="/hr/add-candidate" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                <i class="fas fa-plus-circle me-1"></i> Candidate
+            </a>
+            <a href="/hr/add-judge" class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm">
+                <i class="fas fa-gavel me-1"></i> Judge
+            </a>
+        </div>
+        <div class="col-12 col-md-4 text-center text-md-end">
+            <!-- TRIGGER MODAL -->
+            <button type="button" class="btn btn-outline-danger rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#wipeModal">
+                <i class="fas fa-trash-alt me-1"></i> Wipe Scores
+            </button>
         </div>
     </div>
 
     {% if results %}
-        <!-- TOP 3 PODIUM -->
-        <!-- Add this button at the top of the results -->
-<div class="text-center mb-5">
-    <button id="revealBtn" class="btn btn-dark btn-lg rounded-pill px-5 shadow-lg">
-        <i class="fas fa-crown me-2 text-warning"></i> REVEAL TOP 3 WINNERS
-    </button>
-</div>
-
-<!-- Add these styles to your <style> section -->
-<style>
-    .podium-slot {
-        opacity: 0;
-        transform: translateY(50px);
-        transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .reveal-active .podium-slot:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 0.5s; } /* 3rd Place */
-    .reveal-active .podium-slot:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 2.5s; } /* 2nd Place */
-    .reveal-active .podium-slot:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 5s; }   /* 1st Place! */
-
-    /* Animation for the Grand Winner */
-    .reveal-active .podium-slot:nth-child(1) .winner-card {
-        animation: winnerGlow 2s infinite alternate;
-    }
-    @keyframes winnerGlow {
-        from { box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
-        to { box-shadow: 0 0 50px rgba(212, 175, 55, 0.8); }
-    }
-</style>
-
-<!-- Update your Podium Loop to add the slot classes -->
-<div class="row g-4 mb-5 justify-content-center" id="podiumContainer">
-    {% for name, dept, avg, count in results[:3] %}
-        <!-- We reverse the display order visually so 1st is in the middle if you like,
-             but here we keep it simple for the animation -->
-        <div class="col-12 col-md-4 podium-slot">
-            <!-- Your existing bento-card code here -->
+        <div class="text-center mb-5">
+            <button id="revealBtn" class="btn btn-dark btn-lg rounded-pill px-5 shadow-lg fw-bold">
+                <i class="fas fa-crown me-2 text-warning"></i> REVEAL TOP 3 WINNERS
+            </button>
         </div>
-    {% endfor %}
-</div>
 
-<!-- Script for the reveal -->
-<script>
-    document.getElementById('revealBtn').addEventListener('click', function() {
-        document.getElementById('podiumContainer').classList.add('reveal-active');
-        this.innerHTML = "🏆 TABULATION FINALIZED";
-        this.disabled = true;
-
-        // Play a sound if you want!
-        // var audio = new Audio('fanfare.mp3'); audio.play();
-    });
-</script>
-
-        <div class="row g-4 mb-5 justify-content-center">
+        <div class="row g-4 mb-5 justify-content-center" id="podiumContainer">
             {% for name, dept, avg, count in results[:3] %}
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-4 podium-slot">
                     <div class="bento-card h-100 text-center {% if loop.index == 1 %}winner-card{% endif %}">
                         <div class="d-flex justify-content-center">
                             <div class="rank-seal {% if loop.index == 1 %}rank-seal-gold{% endif %}">{{ loop.index }}</div>
                         </div>
-
-                        {% if loop.index == 1 %}
-                        <svg class="crown-svg" viewBox="0 0 24 24"><path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5Z" fill="#D4AF37"/><path d="M5 18H19V19C19 19.5523 18.5523 20 18 20H6C5.44772 20 5 19.5523 5 19V18Z" fill="#D4AF37"/></svg>
-                        {% endif %}
-
                         <h3 class="fw-bold mb-1">{{ name }}</h3>
-                        <p class="text-muted small fw-bold text-uppercase">{{ dept }}</p>
-
-                        <div class="score-giant">
-                            <!-- FIX: Use (avg or 0) to prevent NoneType Error -->
-                            {{ "%.2f"|format(avg or 0) }}<small>%</small>
-                        </div>
-
+                        <p class="text-muted small fw-bold text-uppercase mb-3">{{ dept }}</p>
+                        <div class="score-giant">{{ "%.2f"|format(avg or 0) }}<small>%</small></div>
                         <div class="mt-2 small fw-bold opacity-50">{{ count }} BALLOTS</div>
                     </div>
                 </div>
             {% endfor %}
         </div>
 
-        <!-- FULL TABLE -->
-        <div class="table-container mb-5">
+        <div class="table-container mb-5 mt-5">
+            <div class="p-4 border-bottom bg-light"><h5 class="mb-0 fw-bold">Full Rankings</h5></div>
             <div class="table-responsive">
                 <table class="table mb-0 align-middle">
                     <thead class="bg-light">
@@ -181,27 +140,118 @@
                         <tr>
                             <td class="ps-4 fw-bold">#{{ loop.index }}</td>
                             <td>
-                                <div class="fw-bold">{{ name }}</div>
-                                <div class="text-muted small">{{ dept }}</div>
+                                <div class="fw-bold text-dark">{{ name }}</div>
+                                <div class="text-muted small text-uppercase">{{ dept }}</div>
                             </td>
-                            <td class="text-center"><span class="badge bg-light text-dark border">{{ count }}</span></td>
-                            <td class="text-end pe-4 fw-900 fs-5">
-                                <!-- FIX: Use (avg or 0) here as well -->
-                                {{ "%.2f"|format(avg or 0) }}%
-                            </td>
+                            <td class="text-center"><span class="badge bg-light text-dark border px-3">{{ count }}</span></td>
+                            <td class="text-end pe-4 fw-bold text-primary fs-5">{{ "%.2f"|format(avg or 0) }}%</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
-    {% else %}
-        <div class="bento-card text-center p-5">
-            <h3>No results available yet.</h3>
-        </div>
     {% endif %}
 
+    <!-- 3. SYSTEM ROSTER -->
+    <div class="row g-4 mt-5">
+        <div class="col-12 col-lg-6">
+            <div class="table-container bg-white shadow-sm">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">Candidate Roster</h5>
+                    <span class="badge bg-primary rounded-pill">{{ all_candidates|length }}</span>
+                </div>
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover mb-0">
+                        <tbody>
+                            {% for can in all_candidates %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ can.name }}</div>
+                                    <div class="small text-muted text-uppercase">{{ can.department }}</div>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <form action="/hr/delete-candidate/{{ can.id }}" method="POST" onsubmit="return confirm('Delete?');">
+                                        <button type="submit" class="btn btn-sm text-danger border-0 bg-transparent"><i class="fas fa-times"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="table-container bg-white shadow-sm">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">Official Judges</h5>
+                    <span class="badge bg-secondary rounded-pill">{{ all_judges|length }}</span>
+                </div>
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover mb-0">
+                        <tbody>
+                            {% for j in all_judges %}
+                            <tr>
+                                <td class="ps-4 fw-bold py-3">{{ j.name }}</td>
+                                <td class="text-end pe-4">
+                                    <form action="/hr/delete-judge/{{ j.id }}" method="POST" onsubmit="return confirm('Delete?');">
+                                        <button type="submit" class="btn btn-sm text-danger border-0 bg-transparent"><i class="fas fa-times"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<script>setTimeout(function(){ location.reload(); }, 15000);</script>
+<!-- 4. WIPE MODAL (Backdrop Disabled via data-bs-backdrop="false") -->
+<div class="modal fade" id="wipeModal" tabindex="-1" aria-labelledby="wipeModalLabel" aria-hidden="true" data-bs-backdrop="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border shadow-lg" style="border-radius: 30px;">
+            <div class="modal-header bg-danger text-white border-0 py-4 px-4">
+                <h5 class="modal-title fw-bold" id="wipeModalLabel"><i class="fas fa-shield-alt me-2"></i>Verify Admin Authorization</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/hr/wipe-scores" method="POST">
+                <div class="modal-body p-4 text-center">
+                    <p class="text-muted mb-4">Are you sure? This will delete all scores permanently. Enter password to confirm.</p>
+                    <input type="password" name="wipe_password" class="form-control form-control-lg text-center rounded-pill mb-3" placeholder="Enter hr@55" required autofocus>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="submit" class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow">PERFORM SYSTEM WIPE</button>
+                    <button type="button" class="btn btn-link w-100 text-muted text-decoration-none mt-2" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Reveal Podium Logic
+    const revealBtn = document.getElementById('revealBtn');
+    if (revealBtn) {
+        revealBtn.addEventListener('click', function() {
+            document.getElementById('podiumContainer').classList.add('reveal-active');
+            this.innerHTML = "🏆 TABULATION FINALIZED";
+            this.disabled = true;
+            this.classList.replace('btn-dark', 'btn-outline-secondary');
+        });
+    }
+
+    // Auto Refresh Logic
+    setTimeout(function(){
+        const podium = document.getElementById('podiumContainer');
+        const modalOpen = document.querySelector('.modal.show');
+        if ((!podium || !podium.classList.contains('reveal-active')) && !modalOpen) {
+            location.reload();
+        }
+    }, 15000);
+</script>
+
 {% endblock %}

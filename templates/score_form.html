@@ -163,9 +163,8 @@
         <h6 class="fw-bold mb-1"><i class="fas fa-calculator me-2"></i>Scoring System</h6>
         <p class="small mb-0 text-muted">
             Total Score is 100%:
-
-            <strong>25%</strong> Department Representation | <strong>25%</strong> Self-Introduction / Communication |
-            <strong>20%</strong> Creativity & Costume / Presentation | <strong>15%</strong> Confidence & Stage Presence | <strong>15%</strong> Overall Impact / Inspiration.
+            <strong>25%</strong> Dept. Rep | <strong>25%</strong> Intro/Comm |
+            <strong>20%</strong> Creativity | <strong>15%</strong> Confidence | <strong>15%</strong> Impact.
         </p>
     </div>
 
@@ -176,15 +175,16 @@
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div style="flex: 1;">
                     <label class="criterion-label">1. Dept. Representation</label>
-                    <p class="criterion-desc">How effectively she embodies her department's unique identity and strength.</p>
+                    <p class="criterion-desc">How effectively she embodies her department's unique identity.</p>
                 </div>
                 <div class="score-display ms-3">
-                    <span class="huge-number" id="val1">{{ "%.1f"|format(existing_score.dept_rep if existing_score else 12.5) }}</span>
+                    <!-- Changed default from 12.5 to 0.0 -->
+                    <span class="huge-number" id="val1">{{ "%.1f"|format(existing_score.dept_rep if existing_score else 0.0) }}</span>
                     <span class="max-label">MAX: 25</span>
                 </div>
             </div>
             <input type="range" name="c1" class="premium-range" min="0" max="25" step="0.5"
-                   value="{{ existing_score.dept_rep if existing_score else 12.5 }}"
+                   value="{{ existing_score.dept_rep if existing_score else 0.0 }}"
                    oninput="document.getElementById('val1').innerText = parseFloat(this.value).toFixed(1)">
         </div>
 
@@ -193,15 +193,16 @@
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div style="flex: 1;">
                     <label class="criterion-label">2. Intro & Communication</label>
-                    <p class="criterion-desc">Clarity of self-introduction, confidence, and charisma in speech delivery.</p>
+                    <p class="criterion-desc">Clarity of self-introduction and confidence in speech.</p>
                 </div>
                 <div class="score-display ms-3">
-                    <span class="huge-number" id="val2">{{ "%.1f"|format(existing_score.comm_skills if existing_score else 12.5) }}</span>
+                    <!-- Changed default from 12.5 to 0.0 -->
+                    <span class="huge-number" id="val2">{{ "%.1f"|format(existing_score.comm_skills if existing_score else 0.0) }}</span>
                     <span class="max-label">MAX: 25</span>
                 </div>
             </div>
             <input type="range" name="c2" class="premium-range" min="0" max="25" step="0.5"
-                   value="{{ existing_score.comm_skills if existing_score else 12.5 }}"
+                   value="{{ existing_score.comm_skills if existing_score else 0.0 }}"
                    oninput="document.getElementById('val2').innerText = parseFloat(this.value).toFixed(1)">
         </div>
 
@@ -210,15 +211,16 @@
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div style="flex: 1;">
                     <label class="criterion-label">3. Creativity & Presentation</label>
-                    <p class="criterion-desc">Originality of costume and overall alignment with the departmental theme.</p>
+                    <p class="criterion-desc">Originality of costume and alignment with theme.</p>
                 </div>
                 <div class="score-display ms-3">
-                    <span class="huge-number" id="val3">{{ "%.1f"|format(existing_score.creativity if existing_score else 10.0) }}</span>
+                    <!-- Changed default from 10.0 to 0.0 -->
+                    <span class="huge-number" id="val3">{{ "%.1f"|format(existing_score.creativity if existing_score else 0.0) }}</span>
                     <span class="max-label">MAX: 20</span>
                 </div>
             </div>
             <input type="range" name="c3" class="premium-range" min="0" max="20" step="0.5"
-                   value="{{ existing_score.creativity if existing_score else 10.0 }}"
+                   value="{{ existing_score.creativity if existing_score else 0.0 }}"
                    oninput="document.getElementById('val3').innerText = parseFloat(this.value).toFixed(1)">
         </div>
 
@@ -227,15 +229,16 @@
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div style="flex: 1;">
                     <label class="criterion-label">4. Confidence & Stage Presence</label>
-                    <p class="criterion-desc">Poise, elegance, and energy while navigating the stage.</p>
+                    <p class="criterion-desc">Poise and energy while on stage.</p>
                 </div>
                 <div class="score-display ms-3">
-                    <span class="huge-number" id="val4">{{ "%.1f"|format(existing_score.confidence if existing_score else 7.5) }}</span>
+                    <!-- Changed default from 7.5 to 0.0 -->
+                    <span class="huge-number" id="val4">{{ "%.1f"|format(existing_score.confidence if existing_score else 0.0) }}</span>
                     <span class="max-label">MAX: 15</span>
                 </div>
             </div>
             <input type="range" name="c4" class="premium-range" min="0" max="15" step="0.5"
-                   value="{{ existing_score.confidence if existing_score else 7.5 }}"
+                   value="{{ existing_score.confidence if existing_score else 0.0 }}"
                    oninput="document.getElementById('val4').innerText = parseFloat(this.value).toFixed(1)">
         </div>
 
@@ -244,15 +247,16 @@
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div style="flex: 1;">
                     <label class="criterion-label">5. Overall Impact & Inspiration</label>
-                    <p class="criterion-desc">Final impression, power to inspire, and general grace under pressure.</p>
+                    <p class="criterion-desc">Final impression and power to inspire.</p>
                 </div>
                 <div class="score-display ms-3">
-                    <span class="huge-number" id="val5">{{ "%.1f"|format(existing_score.impact if existing_score else 7.5) }}</span>
+                    <!-- Changed default from 7.5 to 0.0 -->
+                    <span class="huge-number" id="val5">{{ "%.1f"|format(existing_score.impact if existing_score else 0.0) }}</span>
                     <span class="max-label">MAX: 15</span>
                 </div>
             </div>
             <input type="range" name="c5" class="premium-range" min="0" max="15" step="0.5"
-                   value="{{ existing_score.impact if existing_score else 7.5 }}"
+                   value="{{ existing_score.impact if existing_score else 0.0 }}"
                    oninput="document.getElementById('val5').innerText = parseFloat(this.value).toFixed(1)">
         </div>
 

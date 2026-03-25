@@ -1,0 +1,191 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<style>
+    /* 🚀 PREMIUM ANIMATION & UI LOCK */
+    html, body {
+        overflow: hidden !important;
+        height: 100% !important;
+    }
+
+    .management-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(25px) saturate(180%);
+        -webkit-backdrop-filter: blur(25px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 40px;
+        padding: clamp(30px, 5vh, 60px) 40px;
+        box-shadow: 0 30px 60px rgba(0,0,0,0.08);
+        max-width: 480px;
+        width: 100%;
+        text-align: center;
+        animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes cardEntrance {
+        from { opacity: 0; transform: scale(0.95) translateY(30px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .icon-box {
+        width: 70px;
+        height: 70px;
+        background: white;
+        border-radius: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 25px;
+        font-size: 2rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+
+    .title-large {
+        font-weight: 900;
+        font-size: 2rem;
+        letter-spacing: -1.5px;
+        color: #1d1d1f;
+        margin-bottom: 10px;
+    }
+
+    .subtitle-text {
+        color: #86868b;
+        font-weight: 500;
+        font-size: 0.95rem;
+        margin-bottom: 35px;
+    }
+
+    /* Premium Input Styling */
+    .input-wrapper {
+        text-align: left;
+        margin-bottom: 20px;
+    }
+
+    .input-label {
+        display: block;
+        font-weight: 800;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--pageant-gold);
+        margin-bottom: 8px;
+        padding-left: 5px;
+    }
+
+    .premium-input {
+        width: 100%;
+        background: #f5f5f7;
+        border: 1.5px solid #d2d2d7;
+        border-radius: 18px;
+        padding: 18px 20px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1d1d1f;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+
+    .premium-input:focus {
+        background: #fff;
+        border-color: #007AFF;
+        box-shadow: 0 0 0 5px rgba(0, 122, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    /* Action Buttons */
+    .btn-save {
+        background: #1d1d1f; /* Sleek Black */
+        color: white !important;
+        width: 100%;
+        padding: 18px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        border: none;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    .btn-save:hover {
+        background: #000;
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .btn-cancel {
+        display: inline-block;
+        margin-top: 25px;
+        color: #86868b;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: color 0.2s ease;
+    }
+
+    .btn-cancel:hover {
+        color: #FF3B30; /* Red on hover */
+    }
+</style>
+
+<div class="management-card">
+
+    <div class="icon-box">👑</div>
+
+    <h2 class="title-large">Add Candidate</h2>
+    <p class="subtitle-text">
+        Register a new candidate for the official Binibining Coolaire 2026 roster.
+    </p>
+
+    <form method="POST" id="candidateForm">
+        <!-- Candidate Name -->
+        <div class="input-wrapper">
+            <label class="input-label">Candidate Full Name</label>
+            <input type="text"
+                   name="name"
+                   class="premium-input"
+                   placeholder="e.g. Maria Soledad"
+                   required
+                   autocomplete="off"
+                   autofocus>
+        </div>
+
+        <!-- Department -->
+        <div class="input-wrapper">
+            <label class="input-label">Assigned Department</label>
+            <input type="text"
+                   name="dept"
+                   class="premium-input"
+                   placeholder="e.g. Finance & Treasury"
+                   required
+                   autocomplete="off">
+        </div>
+
+        <button type="submit" class="btn-save" id="saveBtn">
+            Save Candidate Profile
+        </button>
+    </form>
+
+    <a href="/hr-results" class="btn-cancel">
+        <i class="fas fa-arrow-left me-1"></i> Return to Dashboard
+    </a>
+</div>
+
+<script>
+    const form = document.getElementById('candidateForm');
+    const btn = document.getElementById('saveBtn');
+
+    form.addEventListener('submit', () => {
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> Saving...';
+        btn.style.opacity = '0.8';
+        btn.style.pointerEvents = 'none';
+    });
+</script>
+
+{% endblock %}
