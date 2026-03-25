@@ -12,32 +12,63 @@
         position: sticky;
         top: 0;
         z-index: 1000;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        margin: -40px -20px 30px -20px;
-        padding: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(25px) saturate(200%);
+        -webkit-backdrop-filter: blur(25px) saturate(200%);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        margin: -20px -20px 30px -20px;
+        padding: 15px 25px;
+        box-shadow: 0 4px 30px rgba(0,0,0,0.05);
     }
 
     .ballot-candidate-name {
         font-weight: 900;
-        font-size: clamp(1.4rem, 4vw, 2.2rem);
+        font-size: 1.5rem;
         letter-spacing: -1px;
         color: #1d1d1f;
         margin: 0;
+    }
+
+    /* 🔥 LIVE TOTAL DISPLAY */
+    .live-total-box {
+        background: #1d1d1f;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 18px;
+        text-align: center;
+        min-width: 120px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
+    .live-total-label {
+        font-size: 0.6rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--pageant-gold);
+        margin-bottom: -2px;
+    }
+
+    .live-total-value {
+        font-size: 1.6rem;
+        font-weight: 900;
+        line-height: 1;
     }
 
     /* Criterion Bento Card */
     .criterion-card {
         background: white;
         border: 1px solid rgba(0,0,0,0.05);
-        border-radius: 30px;
-        padding: 25px;
+        border-radius: 35px;
+        padding: 30px;
         margin-bottom: 25px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-        position: relative;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.04);
+        transition: transform 0.3s ease;
+    }
+
+    .criterion-card:focus-within {
+        transform: scale(1.02);
+        border-color: var(--pageant-blue);
     }
 
     .criterion-label {
@@ -50,25 +81,27 @@
     }
 
     .criterion-desc {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         color: #86868b;
         line-height: 1.4;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
+        font-weight: 500;
     }
 
     /* Massive Number Display */
     .score-display {
         background: #f5f5f7;
-        border-radius: 20px;
-        padding: 10px 20px;
+        border-radius: 22px;
+        padding: 12px 20px;
         text-align: center;
         min-width: 100px;
+        border: 1px solid rgba(0,0,0,0.03);
     }
 
     .huge-number {
-        font-size: 3rem;
+        font-size: 2.8rem;
         font-weight: 900;
-        color: #007AFF; /* Coolaire Blue */
+        color: var(--pageant-blue);
         line-height: 1;
         display: block;
     }
@@ -84,205 +117,204 @@
     .premium-range {
         -webkit-appearance: none;
         width: 100%;
-        height: 12px;
+        height: 14px;
         background: #e5e5ea;
         border-radius: 10px;
         outline: none;
-        margin-top: 20px;
+        margin-top: 15px;
     }
 
     .premium-range::-webkit-slider-thumb {
         -webkit-appearance: none;
-        appearance: none;
-        width: 40px;
-        height: 40px;
-        background: #007AFF;
+        width: 42px;
+        height: 42px;
+        background: var(--pageant-blue);
         border: 4px solid white;
         border-radius: 50%;
         cursor: pointer;
-        box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+        box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
     }
 
-    /* 🔥 THE BUSSIN SUBMIT BUTTON (NO WHITE) */
     .btn-submit-ballot {
-        background: #007AFF; /* Solid Coolaire Blue */
+        background: #1d1d1f;
         color: white !important;
         border: none;
         width: 100%;
         padding: 22px;
-        border-radius: 24px;
+        border-radius: 25px;
         font-weight: 900;
-        font-size: 1.2rem;
-        letter-spacing: 1px;
+        font-size: 1.1rem;
+        letter-spacing: 1.5px;
         text-transform: uppercase;
-        box-shadow: 0 15px 35px rgba(0, 122, 255, 0.3);
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
         margin-top: 20px;
     }
 
     .btn-submit-ballot:hover {
-        background: #0062cc;
+        background: #000;
         transform: translateY(-5px);
-        box-shadow: 0 20px 40px rgba(0, 122, 255, 0.4);
-    }
-
-    .btn-submit-ballot:active {
-        transform: scale(0.98);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
     }
 
     .back-link {
         display: block;
         text-align: center;
-        margin-top: 25px;
+        margin: 30px 0;
         color: #86868b;
         text-decoration: none;
-        font-weight: 700;
-        font-size: 0.85rem;
+        font-weight: 800;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
 </style>
 
 <div class="container pb-5">
 
-    <!-- Sticky Header -->
+    <!-- Sticky Header with Live Counter -->
     <div class="sticky-ballot-header">
-        <div class="container d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center">
             <div>
-                <span class="max-label">BALLOT FOR:</span>
                 <h1 class="ballot-candidate-name">{{ can.name }}</h1>
-                <span class="badge rounded-pill bg-light text-dark border mt-1">{{ can.department }}</span>
+                <span class="badge rounded-pill bg-primary px-3 py-2 mt-1 small text-uppercase fw-bold">{{ can.department }}</span>
             </div>
-            <div class="text-end d-none d-sm-block">
-                <span class="max-label">JUDGE</span>
-                <div class="fw-bold" style="color: #1d1d1f;">{{ session.judge_name }}</div>
+
+            <div class="live-total-box animate__animated animate__fadeInRight">
+                <div class="live-total-label">Live Score</div>
+                <div class="live-total-value"><span id="liveGrandTotal">0.0</span>%</div>
             </div>
         </div>
-    </div>
-
-    <!-- Scoring System Overview -->
-    <div class="alert alert-info rounded-4 border-0 shadow-sm mb-4" style="background: rgba(0,122,255,0.05);">
-        <h6 class="fw-bold mb-1"><i class="fas fa-calculator me-2"></i>Scoring System</h6>
-        <p class="small mb-0 text-muted">
-            Total Score is 100%:
-            <strong>25%</strong> Dept. Rep | <strong>25%</strong> Intro/Comm |
-            <strong>20%</strong> Creativity | <strong>15%</strong> Confidence | <strong>15%</strong> Impact.
-        </p>
     </div>
 
     <form method="POST" id="ballotForm">
 
         <!-- Criterion 1 -->
         <div class="criterion-card">
-            <div class="d-flex justify-content-between align-items-start mb-2">
+            <div class="d-flex justify-content-between align-items-start">
                 <div style="flex: 1;">
                     <label class="criterion-label">1. Dept. Representation</label>
                     <p class="criterion-desc">How effectively she embodies her department's unique identity.</p>
                 </div>
                 <div class="score-display ms-3">
-                    <!-- Changed default from 12.5 to 0.0 -->
                     <span class="huge-number" id="val1">{{ "%.1f"|format(existing_score.dept_rep if existing_score else 0.0) }}</span>
-                    <span class="max-label">MAX: 25</span>
+                    <span class="max-label">OF 25%</span>
                 </div>
             </div>
             <input type="range" name="c1" class="premium-range" min="0" max="25" step="0.5"
                    value="{{ existing_score.dept_rep if existing_score else 0.0 }}"
-                   oninput="document.getElementById('val1').innerText = parseFloat(this.value).toFixed(1)">
+                   oninput="updateScore(1, this.value)">
         </div>
 
         <!-- Criterion 2 -->
         <div class="criterion-card">
-            <div class="d-flex justify-content-between align-items-start mb-2">
+            <div class="d-flex justify-content-between align-items-start">
                 <div style="flex: 1;">
                     <label class="criterion-label">2. Intro & Communication</label>
                     <p class="criterion-desc">Clarity of self-introduction and confidence in speech.</p>
                 </div>
                 <div class="score-display ms-3">
-                    <!-- Changed default from 12.5 to 0.0 -->
                     <span class="huge-number" id="val2">{{ "%.1f"|format(existing_score.comm_skills if existing_score else 0.0) }}</span>
-                    <span class="max-label">MAX: 25</span>
+                    <span class="max-label">OF 25%</span>
                 </div>
             </div>
             <input type="range" name="c2" class="premium-range" min="0" max="25" step="0.5"
                    value="{{ existing_score.comm_skills if existing_score else 0.0 }}"
-                   oninput="document.getElementById('val2').innerText = parseFloat(this.value).toFixed(1)">
+                   oninput="updateScore(2, this.value)">
         </div>
 
         <!-- Criterion 3 -->
         <div class="criterion-card">
-            <div class="d-flex justify-content-between align-items-start mb-2">
+            <div class="d-flex justify-content-between align-items-start">
                 <div style="flex: 1;">
-                    <label class="criterion-label">3. Creativity & Presentation</label>
-                    <p class="criterion-desc">Originality of costume and alignment with theme.</p>
+                    <label class="criterion-label">3. Creativity & Style</label>
+                    <p class="criterion-desc">Originality of costume and alignment with department theme.</p>
                 </div>
                 <div class="score-display ms-3">
-                    <!-- Changed default from 10.0 to 0.0 -->
                     <span class="huge-number" id="val3">{{ "%.1f"|format(existing_score.creativity if existing_score else 0.0) }}</span>
-                    <span class="max-label">MAX: 20</span>
+                    <span class="max-label">OF 20%</span>
                 </div>
             </div>
             <input type="range" name="c3" class="premium-range" min="0" max="20" step="0.5"
                    value="{{ existing_score.creativity if existing_score else 0.0 }}"
-                   oninput="document.getElementById('val3').innerText = parseFloat(this.value).toFixed(1)">
+                   oninput="updateScore(3, this.value)">
         </div>
 
         <!-- Criterion 4 -->
         <div class="criterion-card">
-            <div class="d-flex justify-content-between align-items-start mb-2">
+            <div class="d-flex justify-content-between align-items-start">
                 <div style="flex: 1;">
-                    <label class="criterion-label">4. Confidence & Stage Presence</label>
-                    <p class="criterion-desc">Poise and energy while on stage.</p>
+                    <label class="criterion-label">4. Stage Poise</label>
+                    <p class="criterion-desc">Confidence, energy, and elegance while on the stage.</p>
                 </div>
                 <div class="score-display ms-3">
-                    <!-- Changed default from 7.5 to 0.0 -->
                     <span class="huge-number" id="val4">{{ "%.1f"|format(existing_score.confidence if existing_score else 0.0) }}</span>
-                    <span class="max-label">MAX: 15</span>
+                    <span class="max-label">OF 15%</span>
                 </div>
             </div>
             <input type="range" name="c4" class="premium-range" min="0" max="15" step="0.5"
                    value="{{ existing_score.confidence if existing_score else 0.0 }}"
-                   oninput="document.getElementById('val4').innerText = parseFloat(this.value).toFixed(1)">
+                   oninput="updateScore(4, this.value)">
         </div>
 
         <!-- Criterion 5 -->
         <div class="criterion-card">
-            <div class="d-flex justify-content-between align-items-start mb-2">
+            <div class="d-flex justify-content-between align-items-start">
                 <div style="flex: 1;">
-                    <label class="criterion-label">5. Overall Impact & Inspiration</label>
-                    <p class="criterion-desc">Final impression and power to inspire.</p>
+                    <label class="criterion-label">5. Overall Impact</label>
+                    <p class="criterion-desc">The final impression and power to inspire the audience.</p>
                 </div>
                 <div class="score-display ms-3">
-                    <!-- Changed default from 7.5 to 0.0 -->
                     <span class="huge-number" id="val5">{{ "%.1f"|format(existing_score.impact if existing_score else 0.0) }}</span>
-                    <span class="max-label">MAX: 15</span>
+                    <span class="max-label">OF 15%</span>
                 </div>
             </div>
             <input type="range" name="c5" class="premium-range" min="0" max="15" step="0.5"
                    value="{{ existing_score.impact if existing_score else 0.0 }}"
-                   oninput="document.getElementById('val5').innerText = parseFloat(this.value).toFixed(1)">
+                   oninput="updateScore(5, this.value)">
         </div>
 
-        <!-- Premium Solid Blue Submit Button -->
         <button type="submit" class="btn-submit-ballot" id="submitBtn">
-            {% if existing_score %}
-                <i class="fas fa-sync-alt me-2"></i> Update Official Vote
-            {% else %}
-                <i class="fas fa-check-circle me-2"></i> Submit Official Ballot
-            {% endif %}
+            {% if existing_score %}Update Ballot{% else %}Submit Official Ballot{% endif %}
         </button>
 
         <a href="{{ url_for('judge_index') }}" class="back-link">
-            <i class="fas fa-chevron-left me-1"></i> Return to Candidate Gallery
+            <i class="fa-solid fa-chevron-left me-1"></i> Cancel & Return
         </a>
 
     </form>
 </div>
 
 <script>
+    function updateScore(id, val) {
+        // Update the individual number
+        document.getElementById('val' + id).innerText = parseFloat(val).toFixed(1);
+
+        // Calculate the Grand Total
+        let total = 0;
+        for (let i = 1; i <= 5; i++) {
+            total += parseFloat(document.getElementsByName('c' + i)[0].value);
+        }
+
+        // Update the sticky header counter
+        document.getElementById('liveGrandTotal').innerText = total.toFixed(1);
+    }
+
+    // Initialize the total on page load
+    window.onload = function() {
+        let total = 0;
+        for (let i = 1; i <= 5; i++) {
+            total += parseFloat(document.getElementsByName('c' + i)[0].value);
+        }
+        document.getElementById('liveGrandTotal').innerText = total.toFixed(1);
+    };
+
+    // Form submission UI
     const form = document.getElementById('ballotForm');
     const btn = document.getElementById('submitBtn');
-
     form.addEventListener('submit', () => {
-        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> RECORDING VOTE...';
-        btn.style.opacity = '0.8';
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> RECORDING...';
+        btn.style.opacity = '0.7';
         btn.style.pointerEvents = 'none';
     });
 </script>

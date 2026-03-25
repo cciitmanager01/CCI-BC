@@ -1,65 +1,268 @@
 {% extends 'layout.html' %}
 {% block content %}
 <style>
+    /* 🚀 PREMIUM ANIMATION & UI LOCK */
+    .poll-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        padding: 10px;
+        animation: pollEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes pollEntrance {
+        from { opacity: 0; transform: scale(0.95) translateY(30px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
     .poll-card {
-        background: white; border-radius: 30px; padding: 40px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-width: 500px; width: 100%;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(25px) saturate(180%);
+        -webkit-backdrop-filter: blur(25px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 40px;
+        padding: clamp(30px, 5vh, 45px);
+        box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+        max-width: 480px;
+        width: 100%;
+        position: relative;
     }
+
+    /* Icon Seal */
+    .icon-seal {
+        width: 70px; height: 70px;
+        background: white;
+        border-radius: 22px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 2rem;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    }
+
+    .poll-title {
+        font-weight: 900;
+        font-size: 1.8rem;
+        letter-spacing: -1px;
+        color: #1d1d1f;
+        margin-bottom: 5px;
+    }
+
+    .poll-subtitle {
+        color: #86868b;
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 30px;
+    }
+
+    /* Premium Input Styling */
+    .input-label-premium {
+        display: block;
+        font-weight: 800;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--pageant-gold);
+        margin-bottom: 10px;
+        text-align: left;
+    }
+
+    .caps-input {
+        width: 100%;
+        background: #f5f5f7;
+        border: 2px solid transparent;
+        border-radius: 20px;
+        padding: 16px 20px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1d1d1f;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+
+    .caps-input:focus {
+        background: #fff;
+        border-color: #007AFF;
+        box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+    }
+
+    /* --- CANDIDATE BENTO LIST --- */
+    .candidate-list {
+        max-height: 280px;
+        overflow-y: auto;
+        padding-right: 10px;
+        margin-bottom: 25px;
+        border-radius: 15px;
+    }
+
+    /* Custom Scrollbar */
+    .candidate-list::-webkit-scrollbar { width: 5px; }
+    .candidate-list::-webkit-scrollbar-track { background: transparent; }
+    .candidate-list::-webkit-scrollbar-thumb { background: #d2d2d7; border-radius: 10px; }
+
     .candidate-option {
-        border: 2px solid #f5f5f7; border-radius: 15px; padding: 15px;
-        margin-bottom: 10px; cursor: pointer; transition: all 0.2s;
+        background: #fff;
+        border: 2px solid #f5f5f7;
+        border-radius: 20px;
+        padding: 18px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
-    .candidate-option:hover { border-color: #007AFF; background: #f0f7ff; }
-    input[type="radio"]:checked + .candidate-option { border-color: #007AFF; background: #f0f7ff; }
+
+    .candidate-option:hover {
+        transform: scale(1.02);
+        border-color: #d2d2d7;
+    }
+
+    input[type="radio"]:checked + .candidate-option {
+        border-color: #007AFF;
+        background: #f0f7ff;
+        box-shadow: 0 10px 20px rgba(0, 122, 255, 0.1);
+    }
+
+    /* THE SUBMIT BUTTON */
+    .btn-submit-vote {
+        background: #1d1d1f;
+        color: white !important;
+        width: 100%;
+        padding: 18px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        border: none;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-submit-vote:hover {
+        background: #000;
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+    }
+
+    /* EXIT ACTION */
+    .btn-exit {
+        margin-top: 25px;
+        color: #86868b;
+        text-decoration: none;
+        font-weight: 800;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: color 0.2s;
+        display: inline-block;
+    }
+
+    .btn-exit:hover { color: #FF3B30; }
+
+    .check-icon {
+        width: 28px; height: 28px;
+        border: 2px solid #d2d2d7;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.3s;
+    }
+
+    input[type="radio"]:checked + .candidate-option .check-icon {
+        background: #007AFF;
+        border-color: #007AFF;
+        color: white;
+    }
 </style>
 
-<div class="poll-card mx-auto text-center">
-    <h2 class="fw-900 mb-2">People's Choice</h2>
-    <p class="text-muted mb-4">Official Employee Voting Portal</p>
+<div class="poll-container">
+    <div class="poll-card text-center">
 
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}<div class="alert alert-danger rounded-pill small fw-bold">{{ messages[0] }}</div>{% endif %}
-    {% endwith %}
+        <div class="icon-seal">🗳️</div>
 
-    <form method="POST">
-        <div class="text-start mb-4">
-            <label class="small fw-bold text-muted text-uppercase mb-2">Employee ID Number</label>
-            <input type="text" name="employee_id" class="form-control form-control-lg rounded-pill" placeholder="Enter ID (e.g. EMP-123)" required>
-        </div>
+        <h2 class="poll-title">People's Choice</h2>
+        <p class="poll-subtitle">Official Employee Selection</p>
 
-        <div class="text-start mb-4">
-            <label class="small fw-bold text-muted text-uppercase mb-2">Select Candidate</label>
-            <div class="candidate-list">
-                {% for can in candidates %}
-                <label class="w-100">
-                    <input type="radio" name="candidate_id" value="{{ can.id }}" class="d-none" required>
-                    <div class="candidate-option d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="fw-bold">{{ can.name }}</div>
-                            <div class="small text-muted">{{ can.department }}</div>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="alert alert-danger rounded-pill py-2 small fw-bold mb-4 animate__animated animate__shakeX">
+                <i class="fas fa-exclamation-triangle me-1"></i> {{ messages[0] }}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" id="pollForm">
+            <!-- Voter Name Section -->
+            <div class="mb-4">
+                <label class="input-label-premium">Voter Identification</label>
+                <input type="text"
+                       name="voter_name"
+                       class="caps-input"
+                       placeholder="FULL NAME (LAST, FIRST)"
+                       required
+                       autocomplete="off">
+            </div>
+
+            <!-- Candidate Selection Section -->
+            <div>
+                <label class="input-label-premium">Select Candidate</label>
+                <div class="candidate-list">
+                    {% for can in candidates %}
+                    <label class="w-100">
+                        <input type="radio" name="candidate_id" value="{{ can.id }}" class="d-none" required>
+                        <div class="candidate-option">
+                            <div class="text-start">
+                                <div class="fw-bold text-dark" style="font-size: 1rem;">{{ can.name }}</div>
+                                <div class="text-muted small fw-bold text-uppercase" style="font-size: 0.65rem;">{{ can.department }}</div>
+                            </div>
+                            <div class="check-icon">
+                                <i class="fas fa-check small"></i>
+                            </div>
                         </div>
-                        <i class="fas fa-check-circle text-primary opacity-0"></i>
-                    </div>
-                </label>
-                {% endfor %}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn-submit-vote">
+                Cast Official Vote
+            </button>
+        </form>
+
+        <div class="d-flex flex-column align-items-center">
+            <a href="/logout" class="btn-exit">
+                <i class="fas fa-arrow-left me-1"></i> Return to Gateway
+            </a>
+
+            <div class="mt-4 small fw-bold text-muted opacity-50" style="letter-spacing: 1px; font-size: 0.6rem;">
+                <i class="fas fa-lock me-1"></i> END-TO-END ENCRYPTED VOTING
             </div>
         </div>
-
-        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold py-3 shadow">CAST MY VOTE</button>
-    </form>
+    </div>
 </div>
 
 <script>
     // Visual feedback for selection
-    document.querySelectorAll('input[type="radio"]').forEach(input => {
+    const radioInputs = document.querySelectorAll('input[type="radio"]');
+    radioInputs.forEach(input => {
         input.addEventListener('change', () => {
-            document.querySelectorAll('.candidate-option').forEach(el => el.classList.remove('border-primary'));
-            document.querySelectorAll('.fa-check-circle').forEach(el => el.style.opacity = '0');
-            if(input.checked) {
-                input.nextElementSibling.classList.add('border-primary');
-                input.nextElementSibling.querySelector('.fa-check-circle').style.opacity = '1';
-            }
+            // No extra JS needed, handled by CSS!
         });
     });
+
+    // Handle Form Loading
+    const form = document.getElementById('pollForm');
+    const btn = document.getElementById('submitBtn');
+    form.addEventListener('submit', () => {
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> RECORDING VOTE...';
+        btn.style.opacity = '0.7';
+        btn.style.pointerEvents = 'none';
+    });
 </script>
+
 {% endblock %}

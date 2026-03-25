@@ -1,0 +1,54 @@
+{% extends 'layout.html' %}
+{% block content %}
+<style>
+    body { background: #000 !important; color: white; }
+    .reveal-box { display: none; }
+    .reveal-active { display: block; animation: zoomIn 1s; }
+    .winner-name { font-size: 5rem; font-weight: 900; color: #D4AF37; }
+    .rank-title { letter-spacing: 5px; text-transform: uppercase; opacity: 0.7; }
+    @keyframes zoomIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+</style>
+
+<div class="container text-center py-5">
+    <!-- Initial State -->
+    <div id="step0">
+        <h1 class="display-3 fw-900 mb-5">Final Tabulation Result</h1>
+        <button onclick="showStep(1)" class="btn btn-outline-warning btn-lg px-5 rounded-pill">REVEAL 2ND RUNNER UP</button>
+    </div>
+
+    <!-- 2nd Runner Up (Rank 3) -->
+    <div id="step1" class="reveal-box">
+        <p class="rank-title">2nd Runner Up</p>
+        <h2 class="winner-name">{{ winners[2].name }}</h2>
+        <p class="fs-4">{{ winners[2].dept }}</p>
+        <button onclick="showStep(2)" class="btn btn-warning mt-5">REVEAL 1ST RUNNER UP</button>
+    </div>
+
+    <!-- 1st Runner Up (Rank 2) -->
+    <div id="step2" class="reveal-box">
+        <p class="rank-title">1st Runner Up</p>
+        <h2 class="winner-name">{{ winners[1].name }}</h2>
+        <p class="fs-4">{{ winners[1].dept }}</p>
+        <button onclick="showStep(3)" class="btn btn-warning mt-5">REVEAL GRAND WINNER</button>
+    </div>
+
+    <!-- Grand Winner (Rank 1) -->
+    <div id="step3" class="reveal-box">
+        <div class="mb-4">👑</div>
+        <p class="rank-title" style="color: #D4AF37;">BINIBINING COOLAIRE 2026</p>
+        <h2 class="winner-name" style="font-size: 7rem; text-shadow: 0 0 30px rgba(212,175,55,0.5);">{{ winners[0].name }}</h2>
+        <p class="fs-2">{{ winners[0].dept }}</p>
+        <div class="mt-5">
+            <a href="/hr-results" class="btn btn-link text-muted">Close Stage</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showStep(s) {
+        document.querySelectorAll('.reveal-box, #step0').forEach(el => el.style.display = 'none');
+        document.getElementById('step' + s).classList.add('reveal-active');
+        document.getElementById('step' + s).style.display = 'block';
+    }
+</script>
+{% endblock %}

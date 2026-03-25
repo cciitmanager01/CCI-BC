@@ -5,45 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Binibining Coolaire 2026</title>
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- 🚀 ADDED: Font Awesome for Trash Icons and UI Symbols -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
             --pageant-gold: #D4AF37;
+            --pageant-blue: #007AFF;
             --text-main: #1d1d1f;
             --subtle-gray: #86868b;
         }
 
-        /* Lock the page to exactly the screen height */
+        /* 🚀 UI IMPROVEMENT: Allow vertical scroll for long lists, lock horizontal */
         html, body {
-            height: 100%;
+            min-height: 100%;
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Disables all scrolling */
+            overflow-x: hidden;
         }
 
         body {
             font-family: 'Inter', sans-serif;
             background-color: #fbfbfd;
             background-image:
-                radial-gradient(at 0% 0%, rgba(212, 175, 55, 0.04) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(0, 122, 255, 0.04) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(212, 175, 55, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(0, 122, 255, 0.05) 0px, transparent 50%);
             display: flex;
             flex-direction: column;
-            justify-content: space-between; /* Spreads Header, Content, Footer apart */
         }
 
-        /* 1. Header Section - Scaled for No-Scroll */
+        /* Header Scaling */
         header {
-            padding-top: clamp(20px, 5vh, 60px);
+            padding-top: clamp(20px, 5vh, 40px);
+            padding-bottom: 20px;
             text-align: center;
             flex-shrink: 0;
         }
 
         .brand-logo-large {
-            width: clamp(100px, 15vh, 160px); /* Height-based scaling */
+            width: clamp(80px, 12vh, 130px);
             height: auto;
             filter: drop-shadow(0 8px 20px rgba(212, 175, 55, 0.2));
             margin-bottom: 10px;
@@ -57,7 +61,7 @@
 
         .brand-title {
             font-weight: 900;
-            font-size: clamp(1.2rem, 5vh, 1.8rem);
+            font-size: clamp(1.2rem, 3vh, 1.8rem);
             letter-spacing: -1px;
             text-transform: uppercase;
             color: var(--text-main);
@@ -65,41 +69,53 @@
         }
 
         .brand-subtitle {
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 4px;
             color: var(--pageant-gold);
-            font-size: clamp(1.2rem, 5vh, 1.8rem);
+            font-size: clamp(0.9rem, 2vh, 1.2rem);
             margin-top: 2px;
+            text-transform: uppercase;
         }
 
-        /* 2. Content Section - Perfectly Centered */
+        /* Content Section */
         main {
             flex-grow: 1;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 10px;
+            padding: 20px;
+            width: 100%;
         }
 
-        /* 3. Footer Section - Fixed at Bottom */
+        /* 🚀 Alert Messages (Flash) */
+        .alert-container {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 20px;
+        }
+
+        /* Footer Section */
         footer {
-            padding-bottom: clamp(15px, 4vh, 40px);
+            padding-top: 20px;
+            padding-bottom: clamp(15px, 4vh, 30px);
             text-align: center;
             flex-shrink: 0;
+            background: transparent;
         }
 
         .footer-divider {
-            width: 30px;
+            width: 40px;
             height: 2px;
             background: var(--pageant-gold);
             margin: 0 auto 12px;
-            opacity: 0.5;
+            opacity: 0.4;
         }
 
         .it-dept-credit {
             font-size: 0.65rem;
-            letter-spacing: 2.5px;
-            font-weight: 700;
+            letter-spacing: 2px;
+            font-weight: 800;
             text-transform: uppercase;
             color: var(--subtle-gray);
             margin: 0;
@@ -107,13 +123,7 @@
 
         .it-dept-credit span {
             color: var(--text-main);
-        }
-
-        /* Mobile specific adjustments to ensure no overflow */
-        @media (max-height: 600px) {
-            header { padding-top: 10px; }
-            .brand-logo-large { margin-bottom: 5px; }
-            footer { padding-bottom: 10px; }
+            font-weight: 900;
         }
 
         .fade-in {
@@ -124,34 +134,52 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Global scrollbar style for bento cards/lists */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d2d2d7; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
+    <!-- Header Area -->
     <header class="fade-in">
         <a href="/">
             <img src="{{ url_for('static', filename='logo.png') }}"
-                 alt="Logo"
+                 alt="Pageant Logo"
                  class="brand-logo-large"
                  onerror="this.src='https://cdn-icons-png.flaticon.com/512/261/261957.png'">
         </a>
         <h1 class="brand-title">Binibining Coolaire</h1>
-        <p class="brand-subtitle">2026</p>
-        <p class="it-dept-credit">Created by : <span>IT Department</span></p>
-
+        <p class="brand-subtitle">Official 2026 Portal</p>
     </header>
 
-    <!-- Content -->
+    <!-- Main Dynamic Content -->
     <main class="fade-in">
-        <!-- The login card from login.html scales automatically inside here -->
+        <!-- 🚀 Alert System for Success/Errors -->
+        <div class="alert-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category if category != 'message' else 'dark' }} rounded-pill text-center small fw-bold shadow-sm py-2">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer>
+    <!-- Footer Area -->
+    <footer class="fade-in">
         <div class="footer-divider"></div>
-        <p style="font-size: 0.55rem; color: #b0b0b5; margin-top: 4px;">&copy; 2026 Binibining Coolaire Foundation</p>
+        <p class="it-dept-credit">Powered by <span>IT Department</span></p>
+        <p style="font-size: 0.55rem; color: #b0b0b5; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px;">
+            &copy; 2026 Binibining Coolaire Foundation
+        </p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

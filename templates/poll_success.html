@@ -1,9 +1,144 @@
 {% extends 'layout.html' %}
 {% block content %}
-<div class="text-center p-5">
-    <div class="display-1 text-success mb-4">🎉</div>
-    <h1 class="fw-900">Vote Recorded!</h1>
-    <p class="text-muted mb-5">Thank you for supporting your favorite candidate. Your vote has been added to the live poll.</p>
-    <a href="/poll" class="btn btn-outline-primary rounded-pill px-5">Back to Home</a>
+
+<style>
+    /* 🚀 PREMIUM ANIMATION & UI LOCK */
+    .success-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(25px) saturate(180%);
+        -webkit-backdrop-filter: blur(25px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 45px;
+        padding: clamp(50px, 8vh, 80px) 40px;
+        box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+        max-width: 480px;
+        width: 100%;
+        text-align: center;
+        animation: successPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes successPop {
+        0% { opacity: 0; transform: scale(0.8) translateY(40px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Success Icon Animation */
+    .success-icon-wrapper {
+        width: 100px;
+        height: 100px;
+        background: #28a745;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 30px;
+        color: white;
+        font-size: 3rem;
+        box-shadow: 0 15px 30px rgba(40, 167, 69, 0.3);
+        position: relative;
+    }
+
+    .success-icon-wrapper::after {
+        content: '';
+        position: absolute;
+        width: 100%; height: 100%;
+        border-radius: 50%;
+        border: 2px solid #28a745;
+        animation: ripple 1.5s infinite;
+    }
+
+    @keyframes ripple {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    .success-title {
+        font-weight: 900;
+        font-size: 2.2rem;
+        letter-spacing: -1.5px;
+        color: #1d1d1f;
+        margin-bottom: 10px;
+    }
+
+    .success-subtitle {
+        color: #86868b;
+        font-weight: 600;
+        font-size: 1rem;
+        line-height: 1.5;
+        margin-bottom: 40px;
+    }
+
+    /* Premium Button */
+    .btn-return {
+        background: #1d1d1f;
+        color: white !important;
+        text-decoration: none;
+        padding: 18px 40px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        display: inline-block;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .btn-return:hover {
+        background: #000;
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+
+    .confetti-piece {
+        position: absolute;
+        width: 8px; height: 8px;
+        background: var(--pageant-gold);
+        opacity: 0;
+    }
+</style>
+
+<div class="success-card">
+
+    <div class="success-icon-wrapper">
+        <i class="fas fa-check"></i>
+    </div>
+
+    <h2 class="success-title">Vote Recorded</h2>
+    <p class="success-subtitle">
+        Thank you for participating! Your selection has been securely added to the 2026 People's Choice Tabulation.
+    </p>
+
+    <a href="/poll" class="btn-return">
+        Return to Gateway
+    </a>
+
+    <div class="mt-5 small fw-bold text-muted opacity-50 text-uppercase" style="letter-spacing: 2px; font-size: 0.6rem;">
+        <i class="fas fa-shield-check me-1"></i> Finalized & Secured
+    </div>
 </div>
+
+<!-- Optional: Simple Confetti effect script -->
+<script>
+    function createConfetti() {
+        for(let i=0; i<20; i++) {
+            const piece = document.createElement('div');
+            piece.className = 'confetti-piece';
+            piece.style.left = Math.random() * 100 + '%';
+            piece.style.top = Math.random() * 100 + '%';
+            piece.style.background = ['#D4AF37', '#007AFF', '#28a745'][Math.floor(Math.random()*3)];
+            document.querySelector('.success-card').appendChild(piece);
+
+            piece.animate([
+                { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                { transform: `translateY(${Math.random() * -200 - 50}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+            ], {
+                duration: 1000 + Math.random() * 1000,
+                easing: 'ease-out'
+            });
+        }
+    }
+    window.onload = createConfetti;
+</script>
+
 {% endblock %}

@@ -8,14 +8,31 @@
     }
 
     .bento-card {
-        background: rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.75);
         backdrop-filter: blur(20px) saturate(180%);
         -webkit-backdrop-filter: blur(20px) saturate(180%);
         border: 1px solid rgba(255, 255, 255, 0.8);
         border-radius: 30px;
-        padding: 30px;
+        padding: 25px;
         box-shadow: 0 15px 35px rgba(0,0,0,0.05);
         margin-bottom: 25px;
+        transition: transform 0.3s ease;
+    }
+
+    /* Computation Guide Styles */
+    .guide-card {
+        background: linear-gradient(135deg, #1d1d1f 0%, #434343 100%);
+        color: white;
+        border: none;
+    }
+    .math-pill {
+        background: rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 10px 15px;
+        display: inline-block;
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        color: var(--pageant-gold);
     }
 
     .winner-card {
@@ -39,8 +56,6 @@
         font-weight: 900; color: #1d1d1f; letter-spacing: -2px;
     }
 
-    .score-giant small { font-size: 1.2rem; color: var(--pageant-gold); }
-
     .table-container {
         background: white;
         border-radius: 24px;
@@ -49,55 +64,73 @@
     }
 
     /* REVEAL ANIMATION */
+    #podiumContainer { display: none; } /* Hidden until button click */
     .podium-slot {
         opacity: 0; transform: translateY(50px);
         transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .reveal-active .podium-slot:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 0.5s; }
-    .reveal-active .podium-slot:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 2.5s; }
-    .reveal-active .podium-slot:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 5s; }
+    .reveal-active .podium-slot { opacity: 1; transform: translateY(0); }
+    .reveal-active .podium-slot:nth-child(3) { transition-delay: 0.5s; }
+    .reveal-active .podium-slot:nth-child(2) { transition-delay: 2.5s; }
+    .reveal-active .podium-slot:nth-child(1) { transition-delay: 5s; }
 
-    /* MODAL CLICK FIX */
     .modal-backdrop { display: none !important; }
-    .modal {
-        background: rgba(0, 0, 0, 0.3);
-        z-index: 9999 !important;
-    }
+    .modal { background: rgba(0, 0, 0, 0.5); z-index: 9999 !important; }
 </style>
 
 <div class="container py-5">
 
     <!-- 1. HEADER -->
-    <div class="row align-items-center mb-4 g-3 text-center text-md-start">
-        <div class="col-12 col-md-8">
-            <h1 style="font-weight: 900; letter-spacing: -1.5px; margin: 0;">HR Results Dashboard</h1>
+    <div class="row align-items-center mb-4 g-3">
+        <div class="col-12 col-md-8 text-center text-md-start">
+            <h1 style="font-weight: 900; letter-spacing: -1.5px; margin: 0;">Tabulation Dashboard</h1>
             <div class="d-flex justify-content-center justify-content-md-start align-items-center gap-2 mt-2">
-                <span class="badge bg-success rounded-pill px-3 py-2">LIVE DATA</span>
-                <span class="text-muted small fw-bold">FINAL WEIGHTED SCORES</span>
+                <span class="badge bg-success rounded-pill px-3 py-2">LIVE ENCRYPTED DATA</span>
+                <span class="text-muted small fw-bold">FINAL WEIGHTED RESULTS</span>
             </div>
         </div>
-        <div class="col-12 col-md-4 text-md-end">
-            <a href="/logout" class="btn btn-outline-danger rounded-pill px-4 fw-bold shadow-sm">EXIT</a>
+        <div class="col-12 col-md-4 text-center text-md-end">
+            <a href="/logout" class="btn btn-outline-danger rounded-pill px-4 fw-bold shadow-sm">EXIT SYSTEM</a>
         </div>
     </div>
 
-    <!-- 2. MANAGEMENT TOOLS -->
-    <div class="row g-3 mb-5 align-items-center bg-white p-3 rounded-4 shadow-sm mx-0">
-        <div class="col-12 col-md-8 d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
-            <a href="/hr/add-candidate" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Add Candidate</a>
-            <a href="/hr/add-judge" class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm">Add Judge</a>
+    <!-- 2. COMPUTATION GUIDE (Management Trust) -->
+    <div class="bento-card guide-card mb-4 animate__animated animate__fadeIn">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <h5 class="fw-bold text-uppercase" style="letter-spacing: 2px; color: var(--pageant-gold);">Official Computation Guide</h5>
+                <p class="small opacity-75">The system automatically calculates the final standing using a two-tier weighted verification method:</p>
+                <div class="math-pill">
+                    Final Score = (JudgeAvg × 0.90) + (PeopleChoiceAvg × 0.10)
+                </div>
+            </div>
+            <div class="col-md-5 mt-3 mt-md-0">
+                <div class="d-flex flex-column gap-2">
+                    <div class="small"><i class="fas fa-gavel me-2 text-primary"></i> <strong>90% Technical:</strong> Criteria-based judging.</div>
+                    <div class="small"><i class="fas fa-users me-2 text-info"></i> <strong>10% People's Choice:</strong> Total vote percentage.</div>
+                </div>
+            </div>
         </div>
-        <div class="col-12 col-md-4 text-center text-md-end">
+    </div>
+
+    <!-- 3. MANAGEMENT TOOLS -->
+    <div class="row g-3 mb-5">
+        <div class="col-md-8 d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+            <a href="/hr/add-candidate" class="btn btn-primary rounded-pill px-4 fw-bold">Add Candidate</a>
+            <a href="/hr/add-judge" class="btn btn-secondary rounded-pill px-4 fw-bold">Add Judge</a>
+            <a href="/hr/reveal" class="btn btn-warning rounded-pill px-4 fw-bold text-dark">Winner Stage View</a>
+        </div>
+        <div class="col-md-4 text-center text-md-end">
             <button type="button" class="btn btn-outline-danger rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#wipeModal">
-                Wipe Scores
+                Wipe All Scores
             </button>
         </div>
     </div>
 
     {% if results %}
-        <!-- 3. PODIUM -->
+        <!-- 4. PODIUM REVEAL -->
         <div class="text-center mb-5">
-            <button id="revealBtn" class="btn btn-dark btn-lg rounded-pill px-5 shadow-lg fw-bold">
+            <button id="revealBtn" class="btn btn-dark btn-lg rounded-pill px-5 shadow-lg fw-900 animate__animated animate__pulse animate__infinite">
                 <i class="fas fa-crown me-2 text-warning"></i> REVEAL TOP 3 WINNERS
             </button>
         </div>
@@ -113,18 +146,47 @@
                         <p class="text-muted small fw-bold text-uppercase mb-3">{{ res.dept }}</p>
                         <div class="score-giant">{{ "%.2f"|format(res.final_score) }}<small>%</small></div>
                         <div class="mt-2 small fw-bold opacity-50">
-                            Judges: {{ "%.1f"|format(res.judge_avg) }}% | Poll: {{ res.poll_count }} votes
+                            Judge Avg: {{ "%.1f"|format(res.judge_avg) }}%
                         </div>
                     </div>
                 </div>
             {% endfor %}
         </div>
 
-        <!-- 4. FULL RANKINGS TABLE -->
-        <div class="table-container mb-5 mt-5">
-            <div class="p-4 border-bottom bg-light d-flex justify-content-between">
-                <h5 class="mb-0 fw-bold">Weighted Rankings (90% Judges | 10% Poll)</h5>
-                <span class="text-muted small">Total Poll Votes: {{ total_emp_votes }}</span>
+        <!-- 5. ANALYTICS GRID (CHART & VOTER LOG) -->
+        <div class="row g-4 mb-5">
+            <div class="col-lg-7">
+                <div class="bento-card h-100">
+                    <h5 class="fw-bold mb-4"><i class="fas fa-chart-bar me-2 text-primary"></i>People's Choice Standing</h5>
+                    <canvas id="pollChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="bento-card h-100">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-fingerprint me-2 text-success"></i>Voter Audit Log ({{ total_emp_votes }})</h5>
+                    <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                        <table class="table table-sm small">
+                            <thead class="sticky-top bg-white">
+                                <tr><th class="text-muted">Verified Voter Name</th><th class="text-end">Status</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for vote in voter_log %}
+                                <tr>
+                                    <td class="fw-bold py-2">{{ vote.voter_name }}</td>
+                                    <td class="text-end text-success fw-bold">SECURE ✓</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. FULL RANKINGS TABLE -->
+        <div class="table-container mb-5">
+            <div class="p-4 border-bottom bg-light">
+                <h5 class="mb-0 fw-bold">Master Result Table</h5>
             </div>
             <div class="table-responsive">
                 <table class="table mb-0 align-middle">
@@ -132,20 +194,20 @@
                         <tr>
                             <th class="ps-4">Rank</th>
                             <th>Candidate</th>
-                            <th class="text-center">Judge Avg</th>
-                            <th class="text-center">Poll Votes</th>
+                            <th class="text-center">Judge Avg (90%)</th>
+                            <th class="text-center">Poll Count (10%)</th>
                             <th class="text-end pe-4">Final Score</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for res in results %}
                         <tr>
-                            <td class="ps-4 fw-bold">#{{ loop.index }}</td>
+                            <td class="ps-4 fw-900">#{{ loop.index }}</td>
                             <td>
                                 <div class="fw-bold text-dark">{{ res.name }}</div>
                                 <div class="text-muted small text-uppercase">{{ res.dept }}</div>
                             </td>
-                            <td class="text-center">{{ "%.1f"|format(res.judge_avg) }}%</td>
+                            <td class="text-center fw-bold text-muted">{{ "%.1f"|format(res.judge_avg) }}%</td>
                             <td class="text-center"><span class="badge bg-light text-dark border px-3">{{ res.poll_count }}</span></td>
                             <td class="text-end pe-4 fw-bold text-primary fs-5">{{ "%.2f"|format(res.final_score) }}%</td>
                         </tr>
@@ -156,103 +218,96 @@
         </div>
     {% endif %}
 
-    <!-- 5. ROSTERS -->
-    <div class="row g-4 mt-5">
-        <div class="col-12 col-lg-6">
-            <div class="table-container bg-white shadow-sm">
-                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold">Candidate Roster</h5>
+    <!-- 7. ROSTERS -->
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="table-container p-4 h-100">
+                <h6 class="fw-bold mb-3"><i class="fas fa-user-friends me-2"></i>Candidates</h6>
+                {% for can in all_candidates %}
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <span class="small fw-bold">{{ can.name }}</span>
+                    <form action="/hr/delete-candidate/{{ can.id }}" method="POST" onsubmit="return confirm('Delete?');">
+                        <button class="btn btn-sm text-danger p-0 border-0 bg-transparent"><i class="fas fa-trash"></i></button>
+                    </form>
                 </div>
-                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-                    <table class="table table-hover mb-0">
-                        <tbody>
-                            {% for can in all_candidates %}
-                            <tr>
-                                <td class="ps-4">
-                                    <div class="fw-bold">{{ can.name }}</div>
-                                    <div class="small text-muted">{{ can.department }}</div>
-                                </td>
-                                <td class="text-end pe-4">
-                                    <form action="/hr/delete-candidate/{{ can.id }}" method="POST" onsubmit="return confirm('Delete?');">
-                                        <button type="submit" class="btn btn-sm text-danger border-0 bg-transparent"><i class="fas fa-times"></i></button>
-                                    </form>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                {% endfor %}
             </div>
         </div>
-
-        <div class="col-12 col-lg-6">
-            <div class="table-container bg-white shadow-sm">
-                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold">Official Judges</h5>
+        <div class="col-md-6">
+            <div class="table-container p-4 h-100">
+                <h6 class="fw-bold mb-3"><i class="fas fa-user-shield me-2"></i>Official Judges</h6>
+                {% for j in all_judges %}
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <span class="small fw-bold">{{ j.name }}</span>
+                    <form action="/hr/delete-judge/{{ j.id }}" method="POST" onsubmit="return confirm('Delete?');">
+                        <button class="btn btn-sm text-danger p-0 border-0 bg-transparent"><i class="fas fa-trash"></i></button>
+                    </form>
                 </div>
-                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-                    <table class="table table-hover mb-0">
-                        <tbody>
-                            {% for j in all_judges %}
-                            <tr>
-                                <td class="ps-4 fw-bold py-3">{{ j.name }}</td>
-                                <td class="text-end pe-4">
-                                    <form action="/hr/delete-judge/{{ j.id }}" method="POST" onsubmit="return confirm('Delete?');">
-                                        <button type="submit" class="btn btn-sm text-danger border-0 bg-transparent"><i class="fas fa-times"></i></button>
-                                    </form>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- 6. WIPE MODAL -->
-<div class="modal fade" id="wipeModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="false">
+<!-- WIPE MODAL -->
+<div class="modal fade" id="wipeModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border shadow-lg" style="border-radius: 30px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 30px;">
             <div class="modal-header bg-danger text-white border-0 py-4 px-4">
-                <h5 class="modal-title fw-bold">Verify Admin Authorization</h5>
+                <h5 class="modal-title fw-bold">System Wipe Authorization</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="/hr/wipe-scores" method="POST">
                 <div class="modal-body p-4 text-center">
-                    <p class="text-muted mb-4">Are you sure? This will delete all scores permanently.</p>
-                    <input type="password" name="wipe_password" class="form-control form-control-lg text-center rounded-pill mb-3" placeholder="Enter Password" required autofocus>
+                    <p class="text-muted mb-4">Are you sure? All scores will be permanently deleted.</p>
+                    <input type="password" name="wipe_password" class="form-control form-control-lg text-center rounded-pill mb-3" placeholder="Master Password" required>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="submit" class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow">PERFORM SYSTEM WIPE</button>
-                    <button type="button" class="btn btn-link w-100 text-muted text-decoration-none mt-2" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger w-100 rounded-pill py-3 fw-bold">PERFORM SYSTEM WIPE</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Reveal Podium Logic
+    // 1. Reveal Podium Logic
     const revealBtn = document.getElementById('revealBtn');
     if (revealBtn) {
         revealBtn.addEventListener('click', function() {
-            document.getElementById('podiumContainer').classList.add('reveal-active');
-            this.innerHTML = "🏆 TABULATION FINALIZED";
-            this.disabled = true;
-            this.classList.replace('btn-dark', 'btn-outline-secondary');
+            const podium = document.getElementById('podiumContainer');
+            podium.style.display = 'flex';
+            setTimeout(() => { podium.classList.add('reveal-active'); }, 10);
+            this.style.display = 'none';
         });
     }
 
-    // Auto Refresh Logic
-    setTimeout(function(){
-        const podium = document.getElementById('podiumContainer');
-        const modalOpen = document.querySelector('.modal.show');
-        if ((!podium || !podium.classList.contains('reveal-active')) && !modalOpen) {
-            location.reload();
+    // 2. Chart Logic
+    const ctx = document.getElementById('pollChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_labels|tojson }},
+            datasets: [{
+                label: 'Votes',
+                data: {{ chart_data|tojson }},
+                backgroundColor: '#007AFF',
+                borderRadius: 10
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: { legend: { display: false } }
         }
-    }, 15000);
+    });
+
+    // 3. Auto Refresh (Every 30s)
+    setInterval(() => {
+        if (!document.querySelector('.modal.show')) { location.reload(); }
+    }, 30000);
 </script>
 
 {% endblock %}

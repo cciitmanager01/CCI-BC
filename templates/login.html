@@ -2,132 +2,176 @@
 {% block content %}
 
 <style>
-    /* Premium Glass Card - Scaled for No-Scroll */
-    .bussin-card {
-        background: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(25px) saturate(180%);
-        -webkit-backdrop-filter: blur(25px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        border-radius: 35px;
-        padding: clamp(30px, 5vh, 50px) 25px;
-        box-shadow: 0 25px 50px rgba(0,0,0,0.06);
-        max-width: 380px;
+    /* 🚀 PREMIUM ANIMATION & UI LOCK */
+    .portal-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(30px) saturate(200%);
+        -webkit-backdrop-filter: blur(30px) saturate(200%);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 45px;
+        padding: clamp(40px, 6vh, 60px) 30px;
+        box-shadow:
+            0 30px 60px rgba(0,0,0,0.12),
+            inset 0 0 0 1px rgba(255,255,255,0.5);
+        max-width: 420px;
         width: 100%;
         text-align: center;
-        animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        animation: portalEntrance 1s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
     }
 
-    @keyframes cardEntrance {
-        from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    @keyframes portalEntrance {
+        from { opacity: 0; transform: scale(0.9) translateY(40px); }
         to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
-    /* Icon Styling */
-    .icon-box {
-        width: 60px;
-        height: 60px;
-        background: #fff;
-        border-radius: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-        font-size: 1.8rem;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+    /* Security Icon with Pulse */
+    .security-icon-wrapper {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 25px;
+    }
+
+    .icon-base {
+        width: 100%; height: 100%;
+        background: white;
+        border-radius: 24px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.2rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        z-index: 2; position: relative;
+    }
+
+    .pulse-ring {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        border: 2px solid #007AFF;
+        border-radius: 24px;
+        animation: pulseAnimation 2s infinite;
+        z-index: 1;
+    }
+
+    @keyframes pulseAnimation {
+        0% { transform: scale(1); opacity: 0.5; }
+        100% { transform: scale(1.5); opacity: 0; }
     }
 
     .login-title {
-        font-weight: 800;
-        font-size: 1.5rem;
-        letter-spacing: -0.5px;
+        font-weight: 900;
+        font-size: 1.8rem;
+        letter-spacing: -1.2px;
         color: #1d1d1f;
-        margin-bottom: 5px;
+        margin-bottom: 8px;
     }
 
     .login-subtitle {
         color: #86868b;
-        font-weight: 500;
+        font-weight: 600;
         font-size: 0.85rem;
-        margin-bottom: 30px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 35px;
     }
 
-    /* PIN Input Group */
+    /* Modern PIN Inputs */
     .code-input-group {
         display: flex;
         justify-content: center;
-        gap: clamp(8px, 2vw, 15px);
+        gap: 12px;
         margin: 30px 0;
     }
 
     .digit-box {
-        width: clamp(55px, 12vw, 65px);
-        height: clamp(75px, 15vh, 85px);
-        background: #fff;
-        border: 1.5px solid #d2d2d7;
-        border-radius: 18px;
-        font-size: 2rem;
-        font-weight: 700;
+        width: 65px;
+        height: 85px;
+        background: #f5f5f7;
+        border: 2px solid transparent;
+        border-radius: 20px;
+        font-size: 2.2rem;
+        font-weight: 800;
         text-align: center;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         outline: none;
         color: #1d1d1f;
-        /* Prevent zoom on iPhone focus */
-        font-size: 2rem;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
     }
 
     .digit-box:focus {
+        background: #fff;
         border-color: #007AFF;
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 122, 255, 0.15);
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0, 122, 255, 0.15);
     }
 
-    /* Feedback Styling */
+    /* Error Shake */
     .error-shake {
         animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        border: 1.5px solid rgba(255, 59, 48, 0.4) !important;
     }
 
     @keyframes shake {
-        10%, 90% { transform: translate3d(-1px, 0, 0); }
-        20%, 80% { transform: translate3d(2px, 0, 0); }
-        30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-        40%, 60% { transform: translate3d(4px, 0, 0); }
+        10%, 90% { transform: translate3d(-2px, 0, 0); }
+        30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+        40%, 60% { transform: translate3d(6px, 0, 0); }
     }
 
-    .access-denied {
-        color: #FF3B30;
-        font-size: 0.75rem;
+    .status-badge {
+        margin-top: 25px;
+        padding: 8px 16px;
+        background: rgba(0, 122, 255, 0.08);
+        border-radius: 100px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #007AFF;
+        font-size: 0.7rem;
         font-weight: 800;
         letter-spacing: 1px;
-        margin-bottom: 15px;
         text-transform: uppercase;
     }
 
-    .loading-status {
-        height: 20px;
-        margin-top: 10px;
+    /* Access Hints (Bottom) */
+    .access-hint {
+        margin-top: 40px;
+        font-size: 0.65rem;
+        color: #aeaeae;
+        font-weight: 600;
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .hint-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
 </style>
 
-<div class="bussin-card {% if get_flashed_messages() %}error-shake{% endif %}">
+<div class="portal-card {% if get_flashed_messages() %}error-shake{% endif %}">
 
-    <div class="icon-box">👑</div>
+    <!-- Security Header -->
+    <div class="security-icon-wrapper">
+        <div class="icon-base">🔒</div>
+        <div class="pulse-ring"></div>
+    </div>
 
-    <h2 class="login-title">Secure Access</h2>
-    <p class="login-subtitle">Please enter your 4-digit security key</p>
+    <h2 class="login-title">Command Center</h2>
+    <p class="login-subtitle">Secure Gateway Authorization</p>
 
+    <!-- Error Message -->
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <div class="access-denied animate__animated animate__fadeIn">
-            <i class="fas fa-exclamation-triangle me-1"></i> Access Denied
+        <div class="text-danger fw-bold small mb-3 animate__animated animate__headShake">
+            <i class="fas fa-shield-times me-1"></i> Invalid Access Key
         </div>
       {% endif %}
     {% endwith %}
 
+    <!-- PIN Form -->
     <form id="loginForm" method="POST">
         <input type="hidden" name="access_code" id="final_code">
         <div class="code-input-group">
-            <!-- Using type="tel" and inputmode="numeric" for perfect mobile keypad -->
             <input type="tel" class="digit-box" maxlength="1" pattern="[0-9]*" inputmode="numeric" autocomplete="one-time-code" autofocus>
             <input type="tel" class="digit-box" maxlength="1" pattern="[0-9]*" inputmode="numeric">
             <input type="tel" class="digit-box" maxlength="1" pattern="[0-9]*" inputmode="numeric">
@@ -135,11 +179,25 @@
         </div>
     </form>
 
-    <div class="loading-status">
-        <div id="loading" class="d-none">
-            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-            <span class="small fw-bold text-primary" style="letter-spacing: 1px;">VERIFYING...</span>
+    <!-- Interactive Status -->
+    <div id="statusArea">
+        <div class="status-badge">
+            <i class="fas fa-fingerprint"></i> System Ready
         </div>
+    </div>
+
+    <div id="loadingArea" class="d-none">
+        <div class="status-badge" style="background: rgba(0, 122, 255, 0.15);">
+            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+            Authenticating...
+        </div>
+    </div>
+
+    <!-- Access Level Hints (Optional, can be removed) -->
+    <div class="access-hint">
+        <div class="hint-item"><i class="fas fa-user-shield"></i> HR</div>
+        <div class="hint-item"><i class="fas fa-gavel"></i> JUDGE</div>
+        <div class="hint-item"><i class="fas fa-users"></i> POLL</div>
     </div>
 </div>
 
@@ -147,48 +205,61 @@
     const inputs = document.querySelectorAll('.digit-box');
     const finalInput = document.getElementById('final_code');
     const form = document.getElementById('loginForm');
-    const loading = document.getElementById('loading');
+    const statusArea = document.getElementById('statusArea');
+    const loadingArea = document.getElementById('loadingArea');
 
     inputs.forEach((input, index) => {
-        // Handle inputting numbers
+        // Handling Number Input
         input.addEventListener('input', (e) => {
-            const value = e.target.value;
+            const val = e.target.value;
 
-            // Clean non-numbers
-            if (!/^\d$/.test(value)) {
+            // Allow only one digit
+            if (!/^\d$/.test(val)) {
                 e.target.value = '';
                 return;
             }
 
-            // Auto-advance
-            if (value && index < inputs.length - 1) {
+            // Move to next
+            if (val && index < inputs.length - 1) {
                 inputs[index + 1].focus();
             }
 
-            // Submission check
-            let code = "";
-            inputs.forEach(i => code += i.value);
-            if (code.length === 4) {
-                // Blur inputs to hide mobile keyboard
-                inputs.forEach(i => i.blur());
-                loading.classList.remove('d-none');
-                finalInput.value = code;
-                setTimeout(() => form.submit(), 600);
-            }
+            // Auto Submit
+            checkCode();
         });
 
-        // Handle backspace navigation
+        // Handling Backspace
         input.addEventListener('keydown', (e) => {
             if (e.key === "Backspace" && !e.target.value && index > 0) {
                 inputs[index - 1].focus();
             }
         });
 
-        // Clean slate on click
-        input.addEventListener('click', (e) => {
-            e.target.select();
-        });
+        // Focus selection
+        input.addEventListener('click', (e) => e.target.select());
     });
+
+    function checkCode() {
+        let code = "";
+        inputs.forEach(i => code += i.value);
+
+        if (code.length === 4) {
+            // UI Transition
+            inputs.forEach(i => {
+                i.blur();
+                i.style.background = "#e1f5fe";
+                i.style.borderColor = "#007AFF";
+            });
+
+            statusArea.classList.add('d-none');
+            loadingArea.classList.remove('d-none');
+
+            finalInput.value = code;
+
+            // Artificial delay for "Premium" feel
+            setTimeout(() => form.submit(), 800);
+        }
+    }
 </script>
 
 {% endblock %}

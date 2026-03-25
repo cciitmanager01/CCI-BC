@@ -1,65 +1,64 @@
 {% extends 'layout.html' %}
 {% block content %}
+
 <style>
-    /* 🚀 NO SCROLL FOR ACTIVATION PAGE */
+    /* 🚀 PREMIUM UI/UX */
     html, body {
         overflow: hidden !important;
         height: 100% !important;
     }
 
     .activation-card {
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(25px) saturate(180%);
-        -webkit-backdrop-filter: blur(25px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        border-radius: 40px;
-        padding: clamp(30px, 5vh, 50px) 30px;
-        box-shadow: 0 30px 60px rgba(0,0,0,0.06);
-        max-width: 450px;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(30px) saturate(200%);
+        -webkit-backdrop-filter: blur(30px) saturate(200%);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 45px;
+        padding: clamp(40px, 6vh, 60px) 40px;
+        box-shadow: 0 40px 80px rgba(0,0,0,0.12);
+        max-width: 460px;
         width: 100%;
         text-align: center;
         animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     @keyframes cardEntrance {
-        from { opacity: 0; transform: scale(0.9) translateY(20px); }
+        from { opacity: 0; transform: scale(0.92) translateY(30px); }
         to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
+    /* Icon Seal - Signature Pen */
     .icon-seal {
-        width: 70px;
-        height: 70px;
-        background: #fff;
-        border-radius: 22px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 25px;
-        font-size: 2rem;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.04);
-        border: 1px solid rgba(0,0,0,0.05);
+        width: 80px; height: 80px;
+        background: white;
+        border-radius: 24px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 30px;
+        font-size: 2.2rem;
+        box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+        color: #1d1d1f;
     }
 
     .activation-title {
-        font-weight: 800;
+        font-weight: 900;
         font-size: 1.8rem;
-        letter-spacing: -1px;
+        letter-spacing: -1.2px;
         color: #1d1d1f;
         margin-bottom: 8px;
     }
 
     .activation-subtitle {
         color: #86868b;
-        font-weight: 500;
+        font-weight: 600;
         font-size: 0.9rem;
-        margin-bottom: 35px;
-        line-height: 1.4;
+        margin-bottom: 40px;
+        line-height: 1.5;
     }
 
-    /* Premium Input */
+    /* Premium Dropdown Styling */
     .input-group-premium {
         text-align: left;
-        margin-bottom: 30px;
+        margin-bottom: 35px;
     }
 
     .label-premium {
@@ -67,99 +66,134 @@
         font-weight: 800;
         font-size: 0.7rem;
         text-transform: uppercase;
-        letter-spacing: 1.5px;
+        letter-spacing: 2px;
         color: var(--pageant-gold);
-        margin-bottom: 10px;
+        margin-bottom: 12px;
         padding-left: 5px;
     }
 
     .judge-input {
         width: 100%;
         background: #f5f5f7;
-        border: 1.5px solid #d2d2d7;
-        border-radius: 18px;
-        padding: 16px 20px;
+        border: 2px solid transparent;
+        border-radius: 20px;
+        padding: 18px 24px;
         font-size: 1.1rem;
-        font-weight: 600;
+        font-weight: 700;
         color: #1d1d1f;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         outline: none;
+        cursor: pointer;
+        /* Custom arrow for dropdown */
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 20px center;
     }
 
     .judge-input:focus {
         background: #fff;
         border-color: #007AFF;
-        box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+        box-shadow: 0 10px 25px rgba(0, 122, 255, 0.1);
         transform: translateY(-2px);
     }
 
-    /* 🔥 THE BUSSIN BUTTON (SOLID BLUE, NO WHITE) */
+    /* THE BUSSIN BUTTON - Solid Black for Executive Feel */
     .btn-activation {
-        background: #007AFF; /* Solid Coolaire Blue */
+        background: #1d1d1f;
         color: white !important;
         width: 100%;
-        padding: 18px;
-        border-radius: 20px;
+        padding: 20px;
+        border-radius: 22px;
         font-weight: 800;
         font-size: 1rem;
         text-transform: uppercase;
-        letter-spacing: 1.5px;
+        letter-spacing: 2px;
         border: none;
-        box-shadow: 0 10px 25px rgba(0, 122, 255, 0.25);
-        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
         cursor: pointer;
     }
 
     .btn-activation:hover {
-        background: #0062cc;
-        transform: translateY(-3px);
-        box-shadow: 0 15px 30px rgba(0, 122, 255, 0.35);
+        background: #000;
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.25);
     }
 
     .btn-activation:active {
         transform: scale(0.98);
     }
 
-    .verify-badge {
+    /* Subtle Exit Action */
+    .btn-exit {
         margin-top: 25px;
+        color: #86868b;
+        text-decoration: none;
+        font-weight: 800;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: color 0.2s;
+        display: inline-block;
+        padding: 8px 20px;
+        border-radius: 100px;
+    }
+
+    .btn-exit:hover {
+        color: #FF3B30;
+        background: rgba(255, 59, 48, 0.05);
+    }
+
+    .verify-badge {
+        margin-top: 20px;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 6px 14px;
+        gap: 8px;
+        padding: 10px 20px;
         background: rgba(0, 122, 255, 0.05);
         border-radius: 100px;
         color: #007AFF;
         font-size: 0.65rem;
         font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
     }
 </style>
 
 <div class="activation-card">
 
-    <div class="icon-seal">✒️</div>
+    <div class="icon-seal">🖋️</div>
 
-    <h2 class="activation-title">Ballot Activation</h2>
+    <h2 class="activation-title">Verify Identity</h2>
     <p class="activation-subtitle">
-        Please sign your <strong>Full Name</strong> to initialize your digital judging portal for the 2026 Pageant.
+        Select your official name from the registry to activate your digital judging credentials.
     </p>
 
     <form method="POST" id="activationForm">
-    <div class="input-group-premium">
-        <label class="label-premium">Select Your Name</label>
-        <select name="judge_name" class="judge-input" required>
-            <option value="" disabled selected>-- Select from List --</option>
-            {% for j in judges %}
-                <option value="{{ j.name }}">{{ j.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <button type="submit" class="btn-activation" id="submitBtn">Initialize Ballot</button>
-</form>
+        <div class="input-group-premium">
+            <label class="label-premium">Authorized Official</label>
+            <select name="judge_name" class="judge-input" required>
+                <option value="" disabled selected>-- Choose Identity --</option>
+                {% for j in judges %}
+                    <option value="{{ j.name }}">{{ j.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-    <div class="verify-badge">
-        <i class="fas fa-shield-check"></i> Identity Secured
+        <button type="submit" class="btn-activation" id="submitBtn">
+            Initialize Digital Ballot
+        </button>
+    </form>
+
+    <div class="d-flex flex-column align-items-center">
+        <a href="/logout" class="btn-exit">
+            <i class="fas fa-chevron-left me-1"></i> Return to Login
+        </a>
+
+        <div class="verify-badge">
+            <i class="fas fa-fingerprint"></i> End-to-End Encrypted
+        </div>
     </div>
 </div>
 
@@ -168,7 +202,7 @@
     const btn = document.getElementById('submitBtn');
 
     form.addEventListener('submit', () => {
-        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> Activating...';
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> Initializing...';
         btn.style.opacity = '0.8';
         btn.style.pointerEvents = 'none';
     });
