@@ -2,6 +2,8 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
+from sqlalchemy import text # Ensure this is at the TOP of your app.py
+
 
 app = Flask(__name__)
 app.secret_key = "coolaire_binibini_2026_secret_key"
@@ -49,26 +51,21 @@ class Judge(db.Model):
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # 1. Get the code from the form
         code = request.form.get('access_code')
-        print(f"Debug: Received code {code}")  # This shows in PyCharm
-
         if code == '6677':
             session['role'] = 'hr'
             return redirect(url_for('hr_results'))
-
         elif code == '8899':
             session['role'] = 'judge'
-            # Important: Clear old judge names if logging in fresh
             session.pop('judge_name', None)
-            print("Debug: Redirecting to Judge Portal")
             return redirect(url_for('judge_index'))
-
+        elif code == '1122': # NEW: Employee Access
+            session['role'] = 'employee'
+            return redirect(url_for('employee_poll'))
         else:
             flash("Invalid Access Code!")
-            print("Debug: Invalid Code Entered")
-
     return render_template('login.html')
+
 
 
 # --- ADD THIS NEW ROUTE ---
@@ -180,8 +177,12 @@ def add_judge():
         db.session.add(new_judge)
         db.session.commit()
         flash("Judge Added!")
-        return redirect(url_for('hr_results'))
-    return render_template('add_judge.html')
+        # Stay on the same page to see the updated roster
+        return redirect(url_for('add_judge'))
+
+    # Fetch all judges to display in the roster list
+    judges = Judge.query.order_by(Judge.name).all()
+    return render_template('add_judge.html', judges=judges)
 
 
 # --- HR MANAGEMENT: WIPE ALL VOTES ---
@@ -209,14 +210,21 @@ def wipe_scores():
 
     return redirect(url_for('hr_results'))
 
+
+# --- HR MANAGEMENT: DELETE CANDIDATE ---
 @app.route('/hr/delete-candidate/<int:id>', methods=['POST'])
 def delete_candidate(id):
     if session.get('role') != 'hr': return redirect(url_for('login'))
+
     can = Candidate.query.get_or_404(id)
+    # Clean up associated scores and poll votes first
+    Score.query.filter_by(candidate_id=id).delete()
+    EmployeeVote.query.filter_by(candidate_id=id).delete()
+
     db.session.delete(can)
     db.session.commit()
     flash(f"Candidate {can.name} removed.")
-    return redirect(url_for('hr_results'))
+    return redirect(request.referrer or url_for('hr_results'))
 
 @app.route('/hr/delete-judge/<int:id>', methods=['POST'])
 def delete_judge(id):
@@ -233,42 +241,50 @@ class EmployeeVote(db.Model):
     __tablename__ = 'hr_employee_votes'
     id = db.Column(db.Integer, primary_key=True)
     candidate_id = db.Column(db.Integer, db.ForeignKey('hr_candidates.id'))
-    employee_id = db.Column(db.String(50), unique=True, nullable=False)
+    voter_name = db.Column(db.String(255), unique=True, nullable=False) # Changed from employee_id to voter_name
 
-
-# --- ADD NEW POLL ROUTE ---
+# --- UPDATE THE POLL ROUTE ---
 @app.route('/poll', methods=['GET', 'POST'])
 def employee_poll():
+    # Only allow if logged in with code 1122
+    if session.get('role') != 'employee':
+        return redirect(url_for('login'))
+
     if request.method == 'POST':
-        emp_id = request.form.get('employee_id').strip().upper()
+        # 1. Capture and Force Uppercase + Strip Whitespace
+        voter_name = request.form.get('voter_name').strip().upper()
         can_id = request.form.get('candidate_id')
 
-        # Check for duplicate
-        existing = EmployeeVote.query.filter_by(employee_id=emp_id).first()
+        if not voter_name:
+            flash("Full Name is required!")
+            return redirect(url_for('employee_poll'))
+
+        # 2. Duplicate Check (Crucial for Management Trust)
+        existing = EmployeeVote.query.filter_by(voter_name=voter_name).first()
         if existing:
-            flash(f"Error: Employee ID {emp_id} has already voted!")
+            flash(f"DENIED: {voter_name} has already recorded a vote!")
             return redirect(url_for('employee_poll'))
 
         try:
-            new_vote = EmployeeVote(candidate_id=can_id, employee_id=emp_id)
+            new_vote = EmployeeVote(candidate_id=can_id, voter_name=voter_name)
             db.session.add(new_vote)
             db.session.commit()
             return render_template('poll_success.html')
-        except:
+        except Exception as e:
             db.session.rollback()
-            flash("System Error. Please try again.")
+            flash("Verification Error. Please contact IT.")
 
     candidates = Candidate.query.all()
     return render_template('employee_poll.html', candidates=candidates)
 
 
 # --- UPDATE HR_RESULTS QUERY ---
+# --- UPDATE THE HR_RESULTS LOOP IN app.py ---
 @app.route('/hr-results')
 def hr_results():
-    if session.get('role') != 'hr': return redirect(url_for('login'))
+    if session.get('role') != 'hr':
+        return redirect(url_for('login'))
 
-    # Logic: Judge Score (Avg) * 0.9 + (Employee Poll Score)
-    # For the poll score: We calculate percentage of total employee votes
     total_emp_votes = db.session.query(func.count(EmployeeVote.id)).scalar() or 1
 
     results = db.session.query(
@@ -279,27 +295,105 @@ def hr_results():
         func.count(EmployeeVote.id).label('poll_count')
     ).join(Score, isouter=True).join(EmployeeVote, isouter=True).group_by(Candidate.id).all()
 
-    # Process Final Weighted Score: (Judge Avg * 0.9) + ((Poll Count / Total Votes) * 100 * 0.1)
     processed_results = []
+    chart_labels = []
+    chart_data = []
+
     for r in results:
-        j_avg = r[2] or 0
-        poll_points = (r[4] / total_emp_votes) * 100
+        # --- FIX IS HERE: Convert r[2] to float explicitly ---
+        j_avg = float(r[2]) if r[2] is not None else 0.0
+        poll_count = r[4] or 0
+
+        # Calculate Poll Weight (Percentage of total votes * 10%)
+        poll_points = (poll_count / total_emp_votes) * 100
+
+        # Now this math will work because both sides are floats
         final_score = (j_avg * 0.9) + (poll_points * 0.1)
+
         processed_results.append({
-            'name': r[0], 'dept': r[1], 'judge_avg': j_avg,
-            'poll_count': r[4], 'final_score': final_score, 'judge_count': r[3]
+            'name': r[0],
+            'dept': r[1],
+            'judge_avg': j_avg,
+            'poll_count': poll_count,
+            'final_score': final_score,
+            'judge_count': r[3]
         })
 
-    # Sort by final score
+        chart_labels.append(r[0])
+        chart_data.append(poll_count)
+
     processed_results.sort(key=lambda x: x['final_score'], reverse=True)
 
     all_candidates = Candidate.query.order_by(Candidate.name).all()
     all_judges = Judge.query.order_by(Judge.name).all()
+    voter_log = EmployeeVote.query.order_by(EmployeeVote.id.desc()).all()
 
-    return render_template('hr_results.html', results=processed_results,
-                           all_candidates=all_candidates, all_judges=all_judges,
+    return render_template('hr_results.html',
+                           results=processed_results,
+                           chart_labels=chart_labels,
+                           chart_data=chart_data,
+                           voter_log=voter_log,
+                           all_candidates=all_candidates,
+                           all_judges=all_judges,
                            total_emp_votes=total_emp_votes)
 
+
+
+# --- NEW: STAGE REVEAL ROUTE ---
+@app.route('/hr/reveal')
+def winner_reveal():
+    if session.get('role') != 'hr':
+        return redirect(url_for('login'))
+
+    # 1. Calculate Total Employee Votes
+    total_emp_votes = db.session.query(func.count(EmployeeVote.id)).scalar() or 1
+
+    # 2. Query for Results
+    results = db.session.query(
+        Candidate.name,
+        Candidate.department,
+        func.avg(Score.total_score).label('j_avg'),
+        func.count(EmployeeVote.id).label('p_count')
+    ).join(Score, isouter=True).join(EmployeeVote, isouter=True).group_by(Candidate.id).all()
+
+    processed = []
+    for r in results:
+        # --- FIX: Convert Decimal to Float and handle None ---
+        j_avg = float(r[2]) if r[2] is not None else 0.0
+        p_count = r[3] or 0
+
+        # Calculate Poll Points (10% weight)
+        poll_pts = (p_count / total_emp_votes) * 100
+
+        # Calculate Final Weighted Score (90% Judges, 10% Poll)
+        final_score = (j_avg * 0.9) + (poll_pts * 0.1)
+
+        processed.append({
+            'name': r[0],
+            'dept': r[1],
+            'score': round(final_score, 2)
+        })
+
+    # Sort by score descending and take top 3
+    processed.sort(key=lambda x: x['score'], reverse=True)
+
+    return render_template('winner_reveal.html', winners=processed[:3])
+
+
 if __name__ == '__main__':
-    # Using port 8080 for Replit compatibility, change to 5000 if using PyCharm
+    with app.app_context():
+        # This is the "Medical Check" for your database
+        try:
+            # 1. This tells SQLAlchemy: "Look at my classes and build what is missing"
+            db.create_all()
+
+            # 2. Verify it exists by running a dummy query
+            db.session.execute(text('SELECT 1 FROM hr_employee_votes LIMIT 1;'))
+            print("✅ SUCCESS: 'hr_employee_votes' table is ready and verified.")
+        except Exception as e:
+            print(f"⚠️ DATABASE RECREATION FAILED: {e}")
+            # If it still fails, we force it one more time:
+            db.create_all()
+
+    # Start the server
     app.run(host='0.0.0.0', port=8080, debug=True)
