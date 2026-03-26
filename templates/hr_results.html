@@ -49,22 +49,25 @@
         font-weight: 800; margin-bottom: 15px;
     }
 
-    .rank-seal-gold { background: var(--pageant-gold) !important; }
-
     .score-giant {
         font-size: clamp(2.5rem, 5vw, 3.5rem);
         font-weight: 900; color: #1d1d1f; letter-spacing: -2px;
     }
 
+    /* 🟢 TABLE CONTAINER - HIDDEN BY DEFAULT */
     .table-container {
         background: white;
         border-radius: 24px;
         overflow: hidden;
         box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        display: none;
+        animation: fadeIn 0.5s ease;
     }
 
+    .judge-score-col { display: none; } /* Extra suspense for technical scores */
+
     /* REVEAL ANIMATION */
-    #podiumContainer { display: none; } /* Hidden until button click */
+    #podiumContainer { display: none; }
     .podium-slot {
         opacity: 0; transform: translateY(50px);
         transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -85,7 +88,7 @@
         <div class="col-12 col-md-8 text-center text-md-start">
             <h1 style="font-weight: 900; letter-spacing: -1.5px; margin: 0;">Tabulation Dashboard</h1>
             <div class="d-flex justify-content-center justify-content-md-start align-items-center gap-2 mt-2">
-                <span class="badge bg-success rounded-pill px-3 py-2">LIVE ENCRYPTED DATA</span>
+                <span class="badge bg-success rounded-pill px-3 py-2">LIVE DATA</span>
                 <span class="text-muted small fw-bold">FINAL WEIGHTED RESULTS</span>
             </div>
         </div>
@@ -94,21 +97,15 @@
         </div>
     </div>
 
-    <!-- 2. COMPUTATION GUIDE (Management Trust) -->
+    <!-- 2. COMPUTATION GUIDE -->
     <div class="bento-card guide-card mb-4 animate__animated animate__fadeIn">
         <div class="row align-items-center">
             <div class="col-md-7">
-                <h5 class="fw-bold text-uppercase" style="letter-spacing: 2px; color: var(--pageant-gold);">Official Computation Guide</h5>
-                <p class="small opacity-75">The system automatically calculates the final standing using a two-tier weighted verification method:</p>
-                <div class="math-pill">
-                    Final Score = (JudgeAvg × 0.90) + (PeopleChoiceAvg × 0.10)
-                </div>
+                <h5 class="fw-bold text-uppercase" style="letter-spacing: 2px; color: var(--pageant-gold);">Computation Logic</h5>
+                <div class="math-pill mt-2">Final = (JudgeAvg × 0.90) + (PeopleChoiceAvg × 0.10)</div>
             </div>
-            <div class="col-md-5 mt-3 mt-md-0">
-                <div class="d-flex flex-column gap-2">
-                    <div class="small"><i class="fas fa-gavel me-2 text-primary"></i> <strong>90% Technical:</strong> Criteria-based judging.</div>
-                    <div class="small"><i class="fas fa-users me-2 text-info"></i> <strong>10% People's Choice:</strong> Total vote percentage.</div>
-                </div>
+            <div class="col-md-5 mt-3 mt-md-0 text-md-end">
+                <a href="/hr/reveal" class="btn btn-warning rounded-pill px-4 fw-900 shadow">OPEN GRAND REVEAL STAGE</a>
             </div>
         </div>
     </div>
@@ -118,19 +115,14 @@
         <div class="col-md-8 d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
             <a href="/hr/add-candidate" class="btn btn-primary rounded-pill px-4 fw-bold">Add Candidate</a>
             <a href="/hr/add-judge" class="btn btn-secondary rounded-pill px-4 fw-bold">Add Judge</a>
-            <a href="/hr/reveal" class="btn btn-warning rounded-pill px-4 fw-bold text-dark">Winner Stage View</a>
-        </div>
-        <div class="col-md-4 text-center text-md-end">
-            <button type="button" class="btn btn-outline-danger rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#wipeModal">
-                Wipe All Scores
-            </button>
+            <button type="button" class="btn btn-outline-danger rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#wipeModal">Wipe Scores</button>
         </div>
     </div>
 
     {% if results %}
         <!-- 4. PODIUM REVEAL -->
         <div class="text-center mb-5">
-            <button id="revealBtn" class="btn btn-dark btn-lg rounded-pill px-5 shadow-lg fw-900 animate__animated animate__pulse animate__infinite">
+            <button id="revealBtn" class="btn btn-dark btn-lg rounded-pill px-5 shadow-lg fw-900">
                 <i class="fas fa-crown me-2 text-warning"></i> REVEAL TOP 3 WINNERS
             </button>
         </div>
@@ -139,54 +131,60 @@
             {% for res in results[:3] %}
                 <div class="col-12 col-md-4 podium-slot">
                     <div class="bento-card h-100 text-center {% if loop.index == 1 %}winner-card{% endif %}">
-                        <div class="d-flex justify-content-center">
-                            <div class="rank-seal {% if loop.index == 1 %}rank-seal-gold{% endif %}">{{ loop.index }}</div>
-                        </div>
+                        <div class="rank-seal mx-auto">{{ loop.index }}</div>
                         <h3 class="fw-bold mb-1">{{ res.name }}</h3>
                         <p class="text-muted small fw-bold text-uppercase mb-3">{{ res.dept }}</p>
                         <div class="score-giant">{{ "%.2f"|format(res.final_score) }}<small>%</small></div>
-                        <div class="mt-2 small fw-bold opacity-50">
-                            Judge Avg: {{ "%.1f"|format(res.judge_avg) }}%
-                        </div>
+                        <div class="judge-score-col mt-2 small fw-bold opacity-50">Judge Avg: {{ "%.1f"|format(res.judge_avg) }}%</div>
                     </div>
                 </div>
             {% endfor %}
         </div>
 
-        <!-- 5. ANALYTICS GRID (CHART & VOTER LOG) -->
+        <!-- 5. ANALYTICS GRID -->
         <div class="row g-4 mb-5">
             <div class="col-lg-7">
                 <div class="bento-card h-100">
-                    <h5 class="fw-bold mb-4"><i class="fas fa-chart-bar me-2 text-primary"></i>People's Choice Standing</h5>
+                    <h5 class="fw-bold mb-4">People's Choice Standing</h5>
                     <canvas id="pollChart" style="max-height: 300px;"></canvas>
                 </div>
             </div>
             <div class="col-lg-5">
-                <div class="bento-card h-100">
-                    <h5 class="fw-bold mb-3"><i class="fas fa-fingerprint me-2 text-success"></i>Voter Audit Log ({{ total_emp_votes }})</h5>
-                    <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
-                        <table class="table table-sm small">
-                            <thead class="sticky-top bg-white">
-                                <tr><th class="text-muted">Verified Voter Name</th><th class="text-end">Status</th></tr>
-                            </thead>
-                            <tbody>
-                                {% for vote in voter_log %}
-                                <tr>
-                                    <td class="fw-bold py-2">{{ vote.voter_name }}</td>
-                                    <td class="text-end text-success fw-bold">SECURE ✓</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+    <div class="bento-card h-100">
+        <h5 class="fw-900 mb-3"><i class="fas fa-fingerprint me-2 text-success"></i>Voter Audit Log ({{ total_emp_votes }})</h5>
+        <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+            <table class="table table-sm small">
+                <thead class="sticky-top bg-white">
+                    <tr>
+                        <th class="text-muted small">EMPLOYEE ID</th>
+                        <th class="text-end small">STATUS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vote in voter_log %}
+                    <tr>
+                        <td class="fw-bold py-2">{{ vote.employee_id }}</td>
+                        <td class="text-end text-success fw-bold">VERIFIED ✓</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
         </div>
 
-        <!-- 6. FULL RANKINGS TABLE -->
-        <div class="table-container mb-5">
+        <!-- 6. MASTER RANKINGS TOGGLE -->
+        <div class="text-center mb-4">
+            <button onclick="toggleMasterTable()" id="masterTableBtn" class="btn btn-outline-primary rounded-pill px-5 fw-bold shadow-sm">
+                <i class="fas fa-list-ol me-2"></i> SHOW MASTER RANKINGS TABLE
+            </button>
+            <button onclick="toggleJudgeScores()" class="btn btn-sm btn-link text-muted ms-2">Toggle Judge Scores</button>
+        </div>
+
+        <div id="masterTableContainer" class="table-container mb-5">
             <div class="p-4 border-bottom bg-light">
-                <h5 class="mb-0 fw-bold">Master Result Table</h5>
+                <h5 class="mb-0 fw-bold">Official Ranking Data</h5>
             </div>
             <div class="table-responsive">
                 <table class="table mb-0 align-middle">
@@ -194,7 +192,7 @@
                         <tr>
                             <th class="ps-4">Rank</th>
                             <th>Candidate</th>
-                            <th class="text-center">Judge Avg (90%)</th>
+                            <th class="text-center judge-score-col">Judge Avg (90%)</th>
                             <th class="text-center">Poll Count (10%)</th>
                             <th class="text-end pe-4">Final Score</th>
                         </tr>
@@ -203,11 +201,8 @@
                         {% for res in results %}
                         <tr>
                             <td class="ps-4 fw-900">#{{ loop.index }}</td>
-                            <td>
-                                <div class="fw-bold text-dark">{{ res.name }}</div>
-                                <div class="text-muted small text-uppercase">{{ res.dept }}</div>
-                            </td>
-                            <td class="text-center fw-bold text-muted">{{ "%.1f"|format(res.judge_avg) }}%</td>
+                            <td class="fw-bold">{{ res.name }}</td>
+                            <td class="text-center fw-bold text-muted judge-score-col">{{ "%.1f"|format(res.judge_avg) }}%</td>
                             <td class="text-center"><span class="badge bg-light text-dark border px-3">{{ res.poll_count }}</span></td>
                             <td class="text-end pe-4 fw-bold text-primary fs-5">{{ "%.2f"|format(res.final_score) }}%</td>
                         </tr>
@@ -219,29 +214,25 @@
     {% endif %}
 
     <!-- 7. ROSTERS -->
-    <div class="row g-4">
+    <div class="row g-4 mt-5">
         <div class="col-md-6">
-            <div class="table-container p-4 h-100">
-                <h6 class="fw-bold mb-3"><i class="fas fa-user-friends me-2"></i>Candidates</h6>
+            <div class="table-container p-4 h-100" style="display: block;">
+                <h6 class="fw-bold mb-3">Candidates</h6>
                 {% for can in all_candidates %}
-                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                    <span class="small fw-bold">{{ can.name }}</span>
-                    <form action="/hr/delete-candidate/{{ can.id }}" method="POST" onsubmit="return confirm('Delete?');">
-                        <button class="btn btn-sm text-danger p-0 border-0 bg-transparent"><i class="fas fa-trash"></i></button>
-                    </form>
+                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom small fw-bold">
+                    <span>{{ can.name }}</span>
+                    <form action="/hr/delete-candidate/{{ can.id }}" method="POST"><button class="btn btn-sm text-danger p-0 border-0 bg-transparent"><i class="fas fa-trash"></i></button></form>
                 </div>
                 {% endfor %}
             </div>
         </div>
         <div class="col-md-6">
-            <div class="table-container p-4 h-100">
-                <h6 class="fw-bold mb-3"><i class="fas fa-user-shield me-2"></i>Official Judges</h6>
+            <div class="table-container p-4 h-100" style="display: block;">
+                <h6 class="fw-bold mb-3">Official Judges</h6>
                 {% for j in all_judges %}
-                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                    <span class="small fw-bold">{{ j.name }}</span>
-                    <form action="/hr/delete-judge/{{ j.id }}" method="POST" onsubmit="return confirm('Delete?');">
-                        <button class="btn btn-sm text-danger p-0 border-0 bg-transparent"><i class="fas fa-trash"></i></button>
-                    </form>
+                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom small fw-bold">
+                    <span>{{ j.name }}</span>
+                    <form action="/hr/delete-judge/{{ j.id }}" method="POST"><button class="btn btn-sm text-danger p-0 border-0 bg-transparent"><i class="fas fa-trash"></i></button></form>
                 </div>
                 {% endfor %}
             </div>
@@ -249,65 +240,57 @@
     </div>
 </div>
 
-<!-- WIPE MODAL -->
+<!-- Wipe Modal -->
 <div class="modal fade" id="wipeModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 30px;">
-            <div class="modal-header bg-danger text-white border-0 py-4 px-4">
-                <h5 class="modal-title fw-bold">System Wipe Authorization</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="/hr/wipe-scores" method="POST">
-                <div class="modal-body p-4 text-center">
-                    <p class="text-muted mb-4">Are you sure? All scores will be permanently deleted.</p>
-                    <input type="password" name="wipe_password" class="form-control form-control-lg text-center rounded-pill mb-3" placeholder="Master Password" required>
-                </div>
-                <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="submit" class="btn btn-danger w-100 rounded-pill py-3 fw-bold">PERFORM SYSTEM WIPE</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content p-4 text-center">
+        <h5 class="fw-bold text-danger">Master Reset</h5><p class="small text-muted">Delete all scores, polls, and audit logs?</p>
+        <form action="/hr/wipe-scores" method="POST"><input type="password" name="wipe_password" class="form-control mb-3 text-center" placeholder="Password" required>
+        <button type="submit" class="btn btn-danger w-100 rounded-pill fw-bold">CONFIRM WIPE</button></form>
+    </div></div>
 </div>
 
-<!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // 1. Reveal Podium Logic
-    const revealBtn = document.getElementById('revealBtn');
-    if (revealBtn) {
-        revealBtn.addEventListener('click', function() {
-            const podium = document.getElementById('podiumContainer');
-            podium.style.display = 'flex';
-            setTimeout(() => { podium.classList.add('reveal-active'); }, 10);
-            this.style.display = 'none';
+    // 🟢 MASTER TABLE TOGGLE
+    function toggleMasterTable() {
+        const table = document.getElementById('masterTableContainer');
+        const btn = document.getElementById('masterTableBtn');
+        if (table.style.display === 'none' || table.style.display === '') {
+            table.style.display = 'block';
+            btn.innerHTML = '<i class="fas fa-eye-slash me-2"></i> HIDE MASTER RANKINGS TABLE';
+            btn.classList.replace('btn-outline-primary', 'btn-dark');
+            table.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            table.style.display = 'none';
+            btn.innerHTML = '<i class="fas fa-list-ol me-2"></i> SHOW MASTER RANKINGS TABLE';
+            btn.classList.replace('btn-dark', 'btn-outline-primary');
+        }
+    }
+
+    // 🟢 JUDGE SCORE TOGGLE
+    function toggleJudgeScores() {
+        document.querySelectorAll('.judge-score-col').forEach(el => {
+            el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'table-cell' : 'none';
+            if (el.tagName === 'DIV') el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
         });
     }
 
-    // 2. Chart Logic
-    const ctx = document.getElementById('pollChart').getContext('2d');
-    new Chart(ctx, {
+    // Reveal Podium Logic
+    document.getElementById('revealBtn').addEventListener('click', function() {
+        const podium = document.getElementById('podiumContainer');
+        podium.style.display = 'flex';
+        setTimeout(() => { podium.classList.add('reveal-active'); }, 10);
+        this.style.display = 'none';
+    });
+
+    // Chart Logic
+    new Chart(document.getElementById('pollChart'), {
         type: 'bar',
         data: {
             labels: {{ chart_labels|tojson }},
-            datasets: [{
-                label: 'Votes',
-                data: {{ chart_data|tojson }},
-                backgroundColor: '#007AFF',
-                borderRadius: 10
-            }]
+            datasets: [{ data: {{ chart_data|tojson }}, backgroundColor: '#007AFF', borderRadius: 10 }]
         },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            plugins: { legend: { display: false } }
-        }
+        options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
     });
-
-    // 3. Auto Refresh (Every 30s)
-    setInterval(() => {
-        if (!document.querySelector('.modal.show')) { location.reload(); }
-    }, 30000);
 </script>
-
 {% endblock %}
