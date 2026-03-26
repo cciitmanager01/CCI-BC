@@ -241,38 +241,45 @@ class EmployeeVote(db.Model):
     __tablename__ = 'hr_employee_votes'
     id = db.Column(db.Integer, primary_key=True)
     candidate_id = db.Column(db.Integer, db.ForeignKey('hr_candidates.id'))
-    voter_name = db.Column(db.String(255), unique=True, nullable=False) # Changed from employee_id to voter_name
+    # employee_id is now the unique key for anti-cheating
+    employee_id = db.Column(db.String(50), unique=True, nullable=False)
+
 
 # --- UPDATE THE POLL ROUTE ---
 @app.route('/poll', methods=['GET', 'POST'])
 def employee_poll():
-    # Only allow if logged in with code 1122
+    # 1. Security Check
     if session.get('role') != 'employee':
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        # 1. Capture and Force Uppercase + Strip Whitespace
-        voter_name = request.form.get('voter_name').strip().upper()
+        # 2. Get the field named 'employee_id' from the HTML form
+        emp_id_raw = request.form.get('employee_id')
         can_id = request.form.get('candidate_id')
 
-        if not voter_name:
-            flash("Full Name is required!")
+        # 3. Safety Check: If the ID is empty
+        if not emp_id_raw:
+            flash("Employee ID is required!", "danger")
             return redirect(url_for('employee_poll'))
 
-        # 2. Duplicate Check (Crucial for Management Trust)
-        existing = EmployeeVote.query.filter_by(voter_name=voter_name).first()
+        # 4. Format the ID (Uppercase and remove spaces)
+        emp_id = emp_id_raw.strip().upper()
+
+        # 5. Anti-Cheat: Check if this ID already exists in the database
+        existing = EmployeeVote.query.filter_by(employee_id=emp_id).first()
         if existing:
-            flash(f"DENIED: {voter_name} has already recorded a vote!")
+            flash(f"DENIED: Employee ID {emp_id} has already recorded a vote!", "danger")
             return redirect(url_for('employee_poll'))
 
         try:
-            new_vote = EmployeeVote(candidate_id=can_id, voter_name=voter_name)
+            # 6. Save to Database using the new 'employee_id' column
+            new_vote = EmployeeVote(candidate_id=can_id, employee_id=emp_id)
             db.session.add(new_vote)
             db.session.commit()
             return render_template('poll_success.html')
         except Exception as e:
             db.session.rollback()
-            flash("Verification Error. Please contact IT.")
+            flash("Database Error. Please try again.", "danger")
 
     candidates = Candidate.query.all()
     return render_template('employee_poll.html', candidates=candidates)
@@ -396,4 +403,290 @@ if __name__ == '__main__':
             db.create_all()
 
     # Start the server
+    app.run(host='0.0.0.0', port=8080, debug=True)
+import os
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func, text
+
+app = Flask(__name__)
+app.secret_key = "coolaire_binibini_2026_secret_key"
+
+# --- DATABASE CONFIGURATION ---
+app.config[
+    'SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres.tqjvwfikswvppeyopvdg:3srdUc8IFDiUkbJu@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+
+# --- DATABASE MODELS ---
+class Candidate(db.Model):
+    __tablename__ = 'hr_candidates'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    department = db.Column(db.String(100), nullable=False)
+
+
+class Score(db.Model):
+    __tablename__ = 'hr_scores'
+    id = db.Column(db.Integer, primary_key=True)
+    candidate_id = db.Column(db.Integer, db.ForeignKey('hr_candidates.id'))
+    judge_name = db.Column(db.String(100))
+    dept_rep = db.Column(db.Float)
+    comm_skills = db.Column(db.Float)
+    creativity = db.Column(db.Float)
+    confidence = db.Column(db.Float)
+    impact = db.Column(db.Float)
+    total_score = db.Column(db.Float)
+
+
+class Judge(db.Model):
+    __tablename__ = 'hr_judges'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+
+
+class EmployeeVote(db.Model):
+    __tablename__ = 'hr_employee_votes'
+    id = db.Column(db.Integer, primary_key=True)
+    candidate_id = db.Column(db.Integer, db.ForeignKey('hr_candidates.id'))
+    employee_id = db.Column(db.String(50), unique=True, nullable=False) # MUST BE employee_id
+
+
+# --- MASTER TABULATION LOGIC ---
+def get_tabulated_results():
+    """Logic used by both HR Dashboard and Stage Reveal to ensure 100% accuracy."""
+    # 1. Get the ACTUAL count for display (0, 1, 2...)
+    actual_vote_count = db.session.query(func.count(EmployeeVote.id)).scalar() or 0
+
+    # 2. Create a safety divisor for math (If count is 0, use 1 to prevent crash)
+    math_divisor = actual_vote_count if actual_vote_count > 0 else 1
+
+    raw_data = db.session.query(
+        Candidate.name,
+        Candidate.department,
+        func.avg(Score.total_score).label('judge_avg'),
+        func.count(Score.id).label('judge_count'),
+        func.count(EmployeeVote.id).label('poll_count')
+    ).join(Score, isouter=True).join(EmployeeVote, isouter=True).group_by(Candidate.id).all()
+
+    processed = []
+    for r in raw_data:
+        j_avg = float(r[2]) if r[2] is not None else 0.0
+
+        # USE THE MATH DIVISOR HERE
+        poll_points = (r[4] / math_divisor) * 100
+        final_score = (j_avg * 0.9) + (poll_points * 0.1)
+
+        processed.append({
+            'name': r[0], 'dept': r[1], 'judge_avg': round(j_avg, 2),
+            'poll_count': r[4], 'final_score': round(final_score, 2), 'judge_count': r[3]
+        })
+
+    processed.sort(key=lambda x: x['final_score'], reverse=True)
+
+    # RETURN THE ACTUAL VOTE COUNT FOR THE UI
+    return processed, actual_vote_count
+
+
+# --- ROUTES ---
+
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        code = request.form.get('access_code')
+        if code == '6677':
+            session['role'] = 'hr'
+            return redirect(url_for('hr_results'))
+        elif code == '8899':
+            session['role'] = 'judge'
+            session.pop('judge_name', None)
+            return redirect(url_for('set_judge_name'))
+        elif code == '1122':
+            session['role'] = 'employee'
+            return redirect(url_for('employee_poll'))
+        else:
+            flash("Invalid Access Code!", "danger")
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+
+@app.route('/judge/set-name', methods=['GET', 'POST'])
+def set_judge_name():
+    if session.get('role') != 'judge': return redirect(url_for('login'))
+    if request.method == 'POST':
+        session['judge_name'] = request.form.get('judge_name')
+        return redirect(url_for('judge_index'))
+    judges = Judge.query.order_by(Judge.name).all()
+    return render_template('set_name.html', judges=judges)
+
+
+@app.route('/judge/candidates')
+def judge_index():
+    if session.get('role') != 'judge' or not session.get('judge_name'):
+        return redirect(url_for('login'))
+    candidates = Candidate.query.all()
+    existing_scores = Score.query.filter_by(judge_name=session.get('judge_name')).all()
+    voted_map = {s.candidate_id: s.total_score for s in existing_scores}
+    return render_template('judge_index.html', candidates=candidates, voted_map=voted_map)
+
+
+@app.route('/judge/score/<int:can_id>', methods=['GET', 'POST'])
+def score_page(can_id):
+    if session.get('role') != 'judge' or not session.get('judge_name'):
+        return redirect(url_for('login'))
+    can = Candidate.query.get_or_404(can_id)
+    judge_name = session.get('judge_name')
+    existing_score = Score.query.filter_by(candidate_id=can_id, judge_name=judge_name).first()
+
+    if request.method == 'POST':
+        d = request.form
+        c1, c2, c3, c4, c5 = float(d['c1']), float(d['c2']), float(d['c3']), float(d['c4']), float(d['c5'])
+        total = c1 + c2 + c3 + c4 + c5
+        if existing_score:
+            existing_score.dept_rep, existing_score.comm_skills = c1, c2
+            existing_score.creativity, existing_score.confidence = c3, c4
+            existing_score.impact, existing_score.total_score = c5, total
+        else:
+            db.session.add(Score(candidate_id=can_id, judge_name=judge_name, dept_rep=c1,
+                                 comm_skills=c2, creativity=c3, confidence=c4, impact=c5, total_score=total))
+        db.session.commit()
+        return redirect(url_for('judge_index'))
+    return render_template('score_form.html', can=can, existing_score=existing_score)
+
+
+@app.route('/poll', methods=['GET', 'POST'])
+def employee_poll():
+    if session.get('role') != 'employee':
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        # 🟢 THE FIX IS HERE: Change 'voter_name' to 'employee_id'
+        emp_id_input = request.form.get('employee_id')
+        can_id = request.form.get('candidate_id')
+
+        # Safety: Check if input was actually received
+        if not emp_id_input:
+            flash("Employee ID is required!", "danger")
+            return redirect(url_for('employee_poll'))
+
+        # Clean the ID
+        emp_id = emp_id_input.strip().upper()
+
+        # ANTI-CHEAT: Check database for this ID
+        existing = EmployeeVote.query.filter_by(employee_id=emp_id).first()
+        if existing:
+            flash(f"DENIED: ID {emp_id} has already voted!", "danger")
+            return redirect(url_for('employee_poll'))
+
+        try:
+            # Save to database
+            new_vote = EmployeeVote(candidate_id=can_id, employee_id=emp_id)
+            db.session.add(new_vote)
+            db.session.commit()
+            return render_template('poll_success.html')
+        except Exception as e:
+            db.session.rollback()
+            flash("Database Error. Please contact IT.", "danger")
+
+    candidates = Candidate.query.all()
+    return render_template('employee_poll.html', candidates=candidates)
+
+
+# --- HR DASHBOARD ---
+@app.route('/hr-results')
+def hr_results():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    results, total_votes = get_tabulated_results()
+
+    chart_results = sorted(results, key=lambda x: x['poll_count'], reverse=True)
+    all_candidates = Candidate.query.order_by(Candidate.name).all()
+    all_judges = Judge.query.order_by(Judge.name).all()
+    voter_log = EmployeeVote.query.order_by(EmployeeVote.id.desc()).all()
+
+    return render_template('hr_results.html', results=results, total_emp_votes=total_votes,
+                           chart_labels=[r['name'] for r in chart_results],
+                           chart_data=[r['poll_count'] for r in chart_results],
+                           voter_log=voter_log, all_candidates=all_candidates, all_judges=all_judges)
+
+
+@app.route('/hr/reveal')
+def winner_reveal():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    results, _ = get_tabulated_results()
+    return render_template('winner_reveal.html', winners=results[:3])
+
+
+# --- MANAGEMENT ---
+@app.route('/hr/add-candidate', methods=['GET', 'POST'])
+def add_candidate():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    if request.method == 'POST':
+        db.session.add(Candidate(name=request.form['name'], department=request.form['dept']))
+        db.session.commit()
+        flash("Candidate Registered!", "success")
+        return redirect(url_for('add_candidate'))
+    candidates = Candidate.query.order_by(Candidate.name).all()
+    return render_template('add_candidate.html', candidates=candidates)
+
+
+@app.route('/hr/add-judge', methods=['GET', 'POST'])
+def add_judge():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    if request.method == 'POST':
+        db.session.add(Judge(name=request.form['name']))
+        db.session.commit()
+        flash("Judge Registered!", "success")
+        return redirect(url_for('add_judge'))
+    judges = Judge.query.order_by(Judge.name).all()
+    return render_template('add_judge.html', judges=judges)
+
+
+@app.route('/hr/delete-candidate/<int:id>', methods=['POST'])
+def delete_candidate(id):
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    Score.query.filter_by(candidate_id=id).delete()
+    EmployeeVote.query.filter_by(candidate_id=id).delete()
+    db.session.delete(Candidate.query.get_or_404(id))
+    db.session.commit()
+    return redirect(request.referrer)
+
+
+@app.route('/hr/delete-judge/<int:id>', methods=['POST'])
+def delete_judge(id):
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    judge = Judge.query.get_or_404(id)
+    Score.query.filter_by(judge_name=judge.name).delete()
+    db.session.delete(judge)
+    db.session.commit()
+    return redirect(request.referrer)
+
+
+# --- MASTER SYSTEM WIPE (Updated to include Polls/Audit Log) ---
+@app.route('/hr/wipe-scores', methods=['POST'])
+def wipe_scores():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    if request.form.get('wipe_password') == 'hr@55':
+        try:
+            db.session.query(Score).delete()  # Clears Professional Scores
+            db.session.query(EmployeeVote).delete()  # Clears Polls & Audit Log
+            db.session.commit()
+            flash("MASTER RESET: All scores and audit logs have been permanently cleared.", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error: {str(e)}", "danger")
+    else:
+        flash("Incorrect Wipe Password!", "danger")
+    return redirect(url_for('hr_results'))
+
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(host='0.0.0.0', port=8080, debug=True)
