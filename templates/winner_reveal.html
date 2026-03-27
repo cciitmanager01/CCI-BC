@@ -3,13 +3,12 @@
 <style>
     /* 🚀 CINEMATIC STAGE SETTINGS */
     html, body {
-        background: #000 !important; /* Pure Black for Projectors */
+        background: #000 !important;
         overflow: hidden !important;
         height: 100vh !important;
         color: white;
     }
 
-    /* Hide standard layout headers/footers to focus on the stage */
     header, footer, .navbar { display: none !important; }
 
     .stage-container {
@@ -28,64 +27,74 @@
         max-width: 1200px;
     }
 
-    /* Animation when a step becomes active */
     .reveal-active {
         display: block;
         animation: cinematicZoom 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     @keyframes cinematicZoom {
-        0% { opacity: 0; transform: scale(0.7) translateY(50px); filter: blur(15px); }
+        0% { opacity: 0; transform: scale(0.75) translateY(30px); filter: blur(15px); }
         100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
     }
 
     .rank-label {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         font-weight: 900;
-        color: #D4AF37; /* Pageant Gold */
+        color: #D4AF37; /* Gold */
         text-transform: uppercase;
-        letter-spacing: 10px;
+        letter-spacing: 12px;
         margin-bottom: 20px;
         display: block;
     }
 
     .winner-name {
-        font-size: clamp(3rem, 10vw, 7rem);
+        font-size: clamp(3.5rem, 10vw, 7.5rem);
         font-weight: 900;
         color: white;
         letter-spacing: -2px;
         line-height: 1;
-        margin-bottom: 10px;
-        text-shadow: 0 0 50px rgba(255,255,255,0.2);
+        text-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
     .winner-dept {
         font-size: 2.2rem;
-        color: rgba(255, 255, 255, 0.5);
+        color: rgba(255, 255, 255, 0.4);
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 5px;
+        margin-top: 15px;
     }
 
-    /* 👑 GRAND WINNER SPECIAL STYLING */
-    .grand-title {
+    /* SUMMARY GRID (For Step 6) */
+    .finalist-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 20px;
+        width: 90%;
+        margin-top: 40px;
+    }
+
+    .finalist-card {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(212, 175, 55, 0.4);
+        padding: 30px 15px;
+        border-radius: 20px;
+        transition: all 0.5s;
+    }
+
+    .finalist-card h4 {
+        font-size: 1.4rem;
+        font-weight: 900;
+        margin: 0;
         color: #D4AF37;
-        font-size: 8.5rem !important;
-        text-shadow: 0 0 40px rgba(212, 175, 55, 0.6);
+        line-height: 1.2;
     }
-
-    .glow-overlay {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 70%);
-        pointer-events: none;
-        animation: pulseGlow 4s infinite alternate;
-    }
-
-    @keyframes pulseGlow {
-        from { opacity: 0.3; }
-        to { opacity: 0.8; }
+    .finalist-card p {
+        font-size: 0.8rem;
+        margin-bottom: 10px;
+        opacity: 0.5;
+        text-transform: uppercase;
+        letter-spacing: 2px;
     }
 
     /* CONTROLS */
@@ -99,15 +108,15 @@
         border-radius: 50px;
         text-transform: uppercase;
         letter-spacing: 3px;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: all 0.4s;
         margin-top: 60px;
+        cursor: pointer;
     }
 
     .btn-reveal:hover {
         background: #D4AF37;
         color: black;
-        transform: scale(1.1);
-        box-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+        box-shadow: 0 0 40px rgba(212, 175, 55, 0.4);
     }
 
     .exit-link {
@@ -119,46 +128,76 @@
         text-decoration: none;
         font-size: 0.8rem;
     }
-    .exit-link:hover { opacity: 1; color: red; }
 </style>
 
 <div class="stage-container">
-    <div class="glow-overlay" id="glow" style="display:none;"></div>
 
     <!-- START STATE -->
     <div id="step0" class="reveal-box reveal-active">
-        <h1 style="font-size: 5rem; font-weight: 900; letter-spacing: -2px;">FINAL RESULTS</h1>
-        <p class="winner-dept" style="color: #D4AF37;">Official Tabulation</p>
-        <button onclick="showStep(1)" class="btn-reveal">Start Announcement</button>
+        <h1 style="font-size: 5rem; font-weight: 900; letter-spacing: -2px;">THE TOP 5</h1>
+        <p class="rank-label" style="color: white; opacity: 0.6; letter-spacing: 5px;">Advancing to the Next Round</p>
+        <button onclick="showStep(5)" class="btn-reveal">Begin Announcement</button>
     </div>
 
-    <!-- 2ND RUNNER UP -->
-    <div id="step1" class="reveal-box">
-        <span class="rank-label">2nd Runner Up</span>
+    <!-- 5TH PLACE REVEAL -->
+    <div id="step5" class="reveal-box">
+        <span class="rank-label">Finalist #5</span>
+        <h2 class="winner-name">{{ winners[4].name if winners|length > 4 else "---" }}</h2>
+        <p class="winner-dept">{{ winners[4].dept if winners|length > 4 else "" }}</p>
+        <button onclick="showStep(4)" class="btn-reveal">Next Finalist</button>
+    </div>
+
+    <!-- 4TH PLACE REVEAL -->
+    <div id="step4" class="reveal-box">
+        <span class="rank-label">Finalist #4</span>
+        <h2 class="winner-name">{{ winners[3].name if winners|length > 3 else "---" }}</h2>
+        <p class="winner-dept">{{ winners[3].dept if winners|length > 3 else "" }}</p>
+        <button onclick="showStep(3)" class="btn-reveal">Next Finalist</button>
+    </div>
+
+    <!-- 3RD PLACE REVEAL -->
+    <div id="step3" class="reveal-box">
+        <span class="rank-label">Finalist #3</span>
         <h2 class="winner-name">{{ winners[2].name if winners|length > 2 else "---" }}</h2>
         <p class="winner-dept">{{ winners[2].dept if winners|length > 2 else "" }}</p>
-        <button onclick="showStep(2)" class="btn-reveal">Reveal 1st Runner Up</button>
+        <button onclick="showStep(2)" class="btn-reveal">Next Finalist</button>
     </div>
 
-    <!-- 1ST RUNNER UP -->
+    <!-- 2ND PLACE REVEAL -->
     <div id="step2" class="reveal-box">
-        <span class="rank-label">1st Runner Up</span>
+        <span class="rank-label">Finalist #2</span>
         <h2 class="winner-name">{{ winners[1].name if winners|length > 1 else "---" }}</h2>
         <p class="winner-dept">{{ winners[1].dept if winners|length > 1 else "" }}</p>
-        <button onclick="showStep(3)" class="btn-reveal">Reveal Grand Winner</button>
+        <button onclick="showStep(1)" class="btn-reveal">Final Qualifier</button>
     </div>
 
-    <!-- GRAND WINNER -->
-    <div id="step3" class="reveal-box">
-        <div style="font-size: 6rem; margin-bottom: 10px;">👑</div>
-        <span class="rank-label" style="font-size: 2rem;">Binibining Coolaire 2026</span>
-        <h1 class="winner-name grand-title">{{ winners[0].name if winners|length > 0 else "---" }}</h1>
-        <p class="winner-dept" style="color: white; opacity: 1;">{{ winners[0].dept if winners|length > 0 else "" }}</p>
+    <!-- 1ST PLACE REVEAL -->
+    <div id="step1" class="reveal-box">
+        <span class="rank-label" style="color: white;">Highest Score Qualifier</span>
+        <h2 class="winner-name" style="color: #D4AF37;">{{ winners[0].name if winners|length > 0 else "---" }}</h2>
+        <p class="winner-dept">{{ winners[0].dept if winners|length > 0 else "" }}</p>
+        <button onclick="showStep(6)" class="btn-reveal">Show All Finalists</button>
+    </div>
 
-        <div class="mt-5">
-            <a href="/hr-results" class="btn btn-outline-light rounded-pill px-4 opacity-25">Close Stage</a>
+    <!-- STEP 6: ALL TOP 5 SUMMARY -->
+    <div id="step6" class="reveal-box">
+        <h1 style="font-weight: 900; letter-spacing: -2px; font-size: 3.5rem;">OUR TOP 5 FINALISTS</h1>
+        <p class="rank-label" style="font-size: 1rem;">Advancing to Round 2</p>
+
+        <div class="finalist-grid">
+            {% for i in range(5) %}
+            <div class="finalist-card">
+                <p>QUALIFIER</p>
+                <h4>{{ winners[i].name if winners|length > i else "---" }}</h4>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-5 pt-4">
+            <a href="/hr-results" class="btn btn-outline-light rounded-pill opacity-25">Exit to Dashboard</a>
         </div>
     </div>
+
 </div>
 
 <a href="/hr-results" class="exit-link">EXIT STAGE</a>
@@ -171,22 +210,17 @@
             el.style.display = 'none';
         });
 
-        // Show the current step
-        const currentStep = document.getElementById('step' + s);
-        currentStep.style.display = 'block';
+        // Show target step
+        const target = document.getElementById('step' + s);
+        target.style.display = 'block';
 
-        // Trigger the animation
+        // Trigger animation
         setTimeout(() => {
-            currentStep.classList.add('reveal-active');
-        }, 10);
+            target.classList.add('reveal-active');
+        }, 20);
 
-        // Turn on the golden glow background when Grand Winner is revealed
-        if (s === 3) {
-            document.getElementById('glow').style.display = 'block';
-        }
-
-        // Fullscreen the stage on the first button click for a better look
-        if (s === 1) {
+        // Auto-Fullscreen on first click
+        if (s === 5) {
             const elem = document.documentElement;
             if (elem.requestFullscreen) { elem.requestFullscreen(); }
         }
