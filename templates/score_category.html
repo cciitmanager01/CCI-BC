@@ -1,0 +1,228 @@
+{% extends 'layout.html' %}
+{% block content %}
+<style>
+    /* 🚀 UNLOCK SCROLL FOR BULK SCORING */
+    html, body {
+        overflow: auto !important;
+        height: auto !important;
+    }
+
+    /* Premium Sticky Header */
+    .category-sticky-header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        margin: -40px -20px 30px -20px;
+        padding: 25px 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    }
+
+    .cat-badge {
+        font-size: 0.65rem;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--pageant-gold);
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    /* Candidate Row Bento Card */
+    .scoring-row {
+        background: white;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 24px;
+        padding: 20px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: all 0.2s ease;
+    }
+
+    .scoring-row:hover {
+        border-color: #007AFF;
+        box-shadow: 0 10px 25px rgba(0, 122, 255, 0.05);
+    }
+
+    .can-info {
+        flex: 1;
+        min-width: 140px;
+    }
+
+    .can-name-small {
+        font-weight: 800;
+        font-size: 1.05rem;
+        color: #1d1d1f;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .can-dept-small {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #86868b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Massive Slider UI */
+    .slider-container {
+        flex: 3;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .score-bubble {
+        background: #f5f5f7;
+        color: #007AFF;
+        width: 70px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        font-weight: 900;
+        font-size: 1.4rem;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .premium-range {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 8px;
+        background: #e5e5ea;
+        border-radius: 10px;
+        outline: none;
+    }
+
+    .premium-range::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 30px;
+        height: 30px;
+        background: #007AFF;
+        border: 3px solid white;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0, 122, 255, 0.2);
+    }
+
+    /* Submit Section */
+    .save-bar {
+        text-align: center;
+        margin-top: 40px;
+        padding-bottom: 60px;
+    }
+
+    .btn-save-bulk {
+        background: #1d1d1f;
+        color: white !important;
+        padding: 20px 60px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border: none;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+    }
+
+    .btn-save-bulk:hover {
+        background: #000;
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .scoring-row { flex-direction: column; align-items: flex-start; }
+        .slider-container { width: 100%; }
+        .can-info { margin-bottom: 10px; }
+    }
+</style>
+
+<div class="container pb-5">
+
+    <!-- Sticky Header -->
+    <div class="category-sticky-header">
+        <div class="container d-flex justify-content-between align-items-center p-0">
+            <div>
+                <span class="cat-badge">Active Category</span>
+                <h1 class="fw-900 mb-0" style="letter-spacing: -1px;">{{ cat.name }}</h1>
+            </div>
+            <div class="text-end">
+                <span class="cat-badge">Max Score</span>
+                <div class="h2 fw-900 mb-0" style="color: #1d1d1f;">{{ cat.max }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Scoring Form -->
+    <form method="POST" id="bulkForm">
+        
+        {% for can in candidates %}
+        <div class="scoring-row shadow-sm">
+            <!-- Candidate Meta -->
+            <div class="can-info">
+                <h3 class="can-name-small">{{ can.name }}</h3>
+                <span class="can-dept-small">{{ can.department }}</span>
+            </div>
+
+            <!-- Slider Logic -->
+            <div class="slider-container">
+                <input type="range" 
+                       name="{{ can.id }}" 
+                       class="premium-range" 
+                       min="0" 
+                       max="{{ cat.max }}" 
+                       step="0.5" 
+                       value="{{ existing_scores.get(can.id) or 0.0 }}"
+                       oninput="updateBubble('{{ can.id }}', this.value)">
+                
+                <div class="score-bubble" id="bubble-{{ can.id }}">
+                    {{ "%.1f"|format(existing_scores.get(can.id) or 0.0) }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Save Button -->
+        <div class="save-bar">
+            <button type="submit" class="btn-save-bulk" id="saveBtn">
+                <i class="fas fa-check-circle me-2"></i> Save All {{ cat.name }} Scores
+            </button>
+            <br>
+            <a href="{{ url_for('judge_index') }}" class="btn btn-link mt-4 text-muted text-decoration-none fw-bold">
+                <i class="fas fa-arrow-left me-1"></i> Cancel & Return to Categories
+            </a>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    // Real-time value update
+    function updateBubble(canId, val) {
+        const bubble = document.getElementById('bubble-' + canId);
+        bubble.innerText = parseFloat(val).toFixed(1);
+    }
+
+    // Double-click prevention
+    const form = document.getElementById('bulkForm');
+    const btn = document.getElementById('saveBtn');
+
+    form.addEventListener('submit', () => {
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> RECORDING SCORES...';
+        btn.style.opacity = '0.8';
+        btn.style.pointerEvents = 'none';
+    });
+</script>
+
+{% endblock %}

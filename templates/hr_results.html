@@ -1,38 +1,41 @@
 {% extends 'layout.html' %}
 {% block content %}
 <style>
-    /* 🚀 UNLOCK SCROLL FOR THIS PAGE */
+    /* 🚀 DASHBOARD STYLES */
     html, body {
         overflow: auto !important;
         height: auto !important;
+        background-color: #f8f9fa;
     }
 
     .bento-card {
-        background: rgba(255, 255, 255, 0.75);
+        background: rgba(255, 255, 255, 0.7);
         backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
         border: 1px solid rgba(255, 255, 255, 0.8);
         border-radius: 30px;
-        padding: 25px;
+        padding: 30px;
         box-shadow: 0 15px 35px rgba(0,0,0,0.05);
         margin-bottom: 25px;
-        transition: transform 0.3s ease;
     }
 
-    /* Computation Guide Styles */
-    .guide-card {
-        background: linear-gradient(135deg, #1d1d1f 0%, #434343 100%);
-        color: white;
-        border: none;
+    /* 💡 SCORING LOGIC STYLES */
+    .logic-card {
+        background: #f1f3f5;
+        border-radius: 20px;
+        padding: 25px;
+        border-left: 5px solid #1d1d1f;
+        margin-bottom: 30px;
     }
-    .math-pill {
-        background: rgba(255,255,255,0.1);
+    .formula-box {
+        background: white;
+        padding: 12px 20px;
         border-radius: 12px;
-        padding: 10px 15px;
         display: inline-block;
-        font-family: 'Courier New', monospace;
+        font-family: 'Courier New', Courier, monospace;
         font-weight: bold;
-        color: var(--pageant-gold);
+        color: #1d1d1f;
+        border: 1px solid #dee2e6;
+        font-size: 1.1rem;
     }
 
     .winner-card {
@@ -49,249 +52,261 @@
         font-weight: 800; margin-bottom: 15px;
     }
 
+    .rank-seal-gold { background: var(--pageant-gold) !important; }
+
     .score-giant {
         font-size: clamp(2.5rem, 5vw, 3.5rem);
         font-weight: 900; color: #1d1d1f; letter-spacing: -2px;
     }
 
-    /* 🟢 TABLE CONTAINER - HIDDEN BY DEFAULT */
+    .score-giant small { font-size: 1.2rem; color: var(--pageant-gold); }
+
     .table-container {
         background: white;
         border-radius: 24px;
         overflow: hidden;
         box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-        display: none;
-        animation: fadeIn 0.5s ease;
     }
-
-    .judge-score-col { display: none; } /* Extra suspense for technical scores */
 
     /* REVEAL ANIMATION */
-    #podiumContainer { display: none; }
     .podium-slot {
-        opacity: 0; transform: translateY(50px);
+        opacity: 0;
+        transform: translateY(50px);
         transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .reveal-active .podium-slot { opacity: 1; transform: translateY(0); }
-    .reveal-active .podium-slot:nth-child(3) { transition-delay: 0.5s; }
-    .reveal-active .podium-slot:nth-child(2) { transition-delay: 2.5s; }
-    .reveal-active .podium-slot:nth-child(1) { transition-delay: 5s; }
+    .reveal-active .podium-slot:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 0.5s; }
+    .reveal-active .podium-slot:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 2.5s; }
+    .reveal-active .podium-slot:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 5s; }
 
     .modal-backdrop { display: none !important; }
-    .modal { background: rgba(0, 0, 0, 0.5); z-index: 9999 !important; }
+    .modal { background: rgba(0, 0, 0, 0.3); z-index: 9999 !important; }
 </style>
 
 <div class="container py-5">
 
-    <!-- 1. HEADER -->
-    <div class="row align-items-center mb-4 g-3">
-        <div class="col-12 col-md-8 text-center text-md-start">
-            <h1 style="font-weight: 900; letter-spacing: -1.5px; margin: 0;">Tabulation Dashboard</h1>
-            <h1 style="font-weight: 900; letter-spacing: -1.5px; margin: 0;">Website : cci-bc.vercel.app</h1>
+    <!-- 1. HEADER SECTION -->
+    <div class="row align-items-center mb-4 g-3 text-center text-md-start">
+        <div class="col-12 col-md-8">
+            <h1 style="font-weight: 900; letter-spacing: -1.5px; margin: 0;">HR Results Dashboard</h1>
             <div class="d-flex justify-content-center justify-content-md-start align-items-center gap-2 mt-2">
                 <span class="badge bg-success rounded-pill px-3 py-2">LIVE DATA</span>
-                <span class="text-muted small fw-bold">FINAL WEIGHTED RESULTS</span>
+                <span class="text-muted small fw-bold">TABULATION: 100% JUDGING</span>
             </div>
+        </div>
+        <div class="col-12 col-md-4 text-md-end">
+            <a href="/logout" class="btn btn-outline-danger rounded-pill px-4 fw-bold shadow-sm">EXIT</a>
+        </div>
+    </div>
+
+    <!-- 2. MANAGEMENT TOOLS -->
+    <div class="row g-3 mb-5 align-items-center bg-white p-3 rounded-4 shadow-sm mx-0">
+        <div class="col-12 col-md-8 d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+            <a href="/hr/add-candidate" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Add Candidate</a>
+            <a href="/hr/add-judge" class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm">Add Judge</a>
+            <a href="/hr/reveal" class="btn btn-dark rounded-pill px-4 fw-bold shadow-sm">
+                <i class="fas fa-external-link-alt me-1"></i> Stage Reveal
+            </a>
         </div>
         <div class="col-12 col-md-4 text-center text-md-end">
-            <a href="/logout" class="btn btn-outline-danger rounded-pill px-4 fw-bold shadow-sm">EXIT SYSTEM</a>
-        </div>
-    </div>
-
-    <!-- 2. COMPUTATION GUIDE -->
-    <div class="bento-card guide-card mb-4 animate__animated animate__fadeIn">
-        <div class="row align-items-center">
-            <div class="col-md-7">
-                <h5 class="fw-bold text-uppercase" style="letter-spacing: 2px; color: var(--pageant-gold);">Computation Logic</h5>
-                <div class="math-pill mt-2">Final = (JudgeAvg × 0.90) + (PeopleChoiceAvg × 0.10)</div>
-            </div>
-            <div class="col-md-5 mt-3 mt-md-0 text-md-end">
-                <a href="/hr/reveal" class="btn btn-warning rounded-pill px-4 fw-900 shadow">OPEN GRAND REVEAL STAGE</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. MANAGEMENT TOOLS -->
-    <div class="row g-3 mb-5">
-        <div class="col-md-8 d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
-            <a href="/hr/add-candidate" class="btn btn-primary rounded-pill px-4 fw-bold">Add Candidate</a>
-            <a href="/hr/add-judge" class="btn btn-secondary rounded-pill px-4 fw-bold">Add Judge</a>
-            <button type="button" class="btn btn-outline-danger rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#wipeModal">Wipe Scores</button>
+            <button type="button" class="btn btn-outline-danger rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#wipeModal">
+                Wipe All Scores
+            </button>
         </div>
     </div>
 
     {% if results %}
-        <!-- 4. PODIUM REVEAL -->
+        <!-- 3. REVEAL CONTROLLER -->
         <div class="text-center mb-5">
-            <button id="revealBtn" class="btn btn-dark btn-lg rounded-pill px-5 shadow-lg fw-900">
-                <i class="fas fa-crown me-2 text-warning"></i> REVEAL TOP 3 WINNERS
+            <button id="revealBtn" class="btn btn-dark btn-lg rounded-pill px-5 shadow-lg fw-bold">
+                <i class="fas fa-crown me-2 text-warning"></i> REVEAL TOP 3 ON DASHBOARD
             </button>
         </div>
 
+        <!-- 4. ANIMATED PODIUM -->
         <div class="row g-4 mb-5 justify-content-center" id="podiumContainer">
             {% for res in results[:3] %}
                 <div class="col-12 col-md-4 podium-slot">
                     <div class="bento-card h-100 text-center {% if loop.index == 1 %}winner-card{% endif %}">
-                        <div class="rank-seal mx-auto">{{ loop.index }}</div>
-                        <h3 class="fw-bold mb-1">{{ res.name }}</h3>
-                        <p class="text-muted small fw-bold text-uppercase mb-3">{{ res.dept }}</p>
-                        <div class="score-giant">{{ "%.2f"|format(res.final_score) }}<small>%</small></div>
-                        <div class="judge-score-col mt-2 small fw-bold opacity-50">Judge Avg: {{ "%.1f"|format(res.judge_avg) }}%</div>
+                        <div class="d-flex justify-content-center">
+                            <div class="rank-seal {% if loop.index == 1 %}rank-seal-gold{% endif %}">{{ loop.index }}</div>
+                        </div>
+                        <h3 class="fw-bold mb-1">{{ res['name'] }}</h3>
+                        <p class="text-muted small fw-bold text-uppercase mb-3">{{ res['dept'] }}</p>
+                        <div class="score-giant">{{ "%.2f"|format(res['judge_avg'] or 0) }}<small>%</small></div>
+                        <div class="mt-2 small fw-bold opacity-50">
+                             Total Ballots Cast: {{ res['judge_count'] }}
+                        </div>
                     </div>
                 </div>
             {% endfor %}
         </div>
 
-        <!-- 5. ANALYTICS GRID -->
-        <div class="row g-4 mb-5">
-            <div class="col-lg-7">
-                <div class="bento-card h-100">
-                    <h5 class="fw-bold mb-4">People's Choice Standing</h5>
-                    <canvas id="pollChart" style="max-height: 300px;"></canvas>
+        <!-- 5. SCORING INSTRUCTIONS -->
+        <div class="logic-card shadow-sm">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                    <i class="fas fa-calculator small"></i>
+                </div>
+                <h5 class="mb-0 fw-bold">Scoring & Tabulation Logic</h5>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-7">
+                    <p class="small text-muted mb-2 uppercase fw-bold">Calculation Formula</p>
+                    <div class="formula-box mb-3">
+                        Total Combined Points ÷ Active Judge Count
+                    </div>
+                    <p class="small text-muted">
+                        The <strong>Judge Average</strong> is calculated in real-time. The system sums all individual points awarded to a candidate and divides them by the number of judges who have successfully submitted a ballot for that candidate.
+                    </p>
+                </div>
+                <div class="col-md-5">
+                    <p class="small text-muted mb-2 uppercase fw-bold">Ranking Rules</p>
+                    <ul class="small text-muted ps-3">
+                        <li>Ranking is determined <strong>100%</strong> by the final Judge Average.</li>
+                        <li>The system automatically sorts candidates from highest average to lowest.</li>
+                        <li>In the case of a tie, the HR panel may refer to the highest individual judge's score as a tie-breaker.</li>
+                    </ul>
                 </div>
             </div>
-            <div class="col-lg-5">
-    <div class="bento-card h-100">
-        <h5 class="fw-900 mb-3"><i class="fas fa-fingerprint me-2 text-success"></i>Voter Audit Log ({{ total_emp_votes }})</h5>
-        <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
-            <table class="table table-sm small">
-                <thead class="sticky-top bg-white">
-                    <tr>
-                        <th class="text-muted small">EMPLOYEE ID</th>
-                        <th class="text-end small">STATUS</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for vote in voter_log %}
-                    <tr>
-                        <td class="fw-bold py-2">{{ vote.employee_id }}</td>
-                        <td class="text-end text-success fw-bold">VERIFIED ✓</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
         </div>
 
-        <!-- 6. MASTER RANKINGS TOGGLE -->
-        <div class="text-center mb-4">
-            <button onclick="toggleMasterTable()" id="masterTableBtn" class="btn btn-outline-primary rounded-pill px-5 fw-bold shadow-sm">
-                <i class="fas fa-list-ol me-2"></i> SHOW MASTER RANKINGS TABLE
-            </button>
-            <button onclick="toggleJudgeScores()" class="btn btn-sm btn-link text-muted ms-2">Toggle Judge Scores</button>
-        </div>
-
-        <div id="masterTableContainer" class="table-container mb-5">
+        <!-- 6. FULL RANKING TABLE -->
+        <div class="table-container mb-5 mt-5">
             <div class="p-4 border-bottom bg-light">
-                <h5 class="mb-0 fw-bold">Official Ranking Data</h5>
+                <h5 class="mb-0 fw-bold">Final Tabulation Roster</h5>
             </div>
             <div class="table-responsive">
                 <table class="table mb-0 align-middle">
-                    <thead class="bg-light">
+                    <thead class="bg-light text-muted small text-uppercase">
                         <tr>
                             <th class="ps-4">Rank</th>
-                            <th>Candidate</th>
-                            <th class="text-center judge-score-col">Judge Avg (90%)</th>
-                            <th class="text-center">Poll Count (10%)</th>
-                            <th class="text-end pe-4">Final Score</th>
+                            <th>Candidate Name</th>
+                            <th>Department</th>
+                            <th class="text-center">Ballots Cast</th>
+                            <th class="text-end pe-4">Judge Average Score</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for res in results %}
                         <tr>
-                            <td class="ps-4 fw-900">#{{ loop.index }}</td>
-                            <td class="fw-bold">{{ res.name }}</td>
-                            <td class="text-center fw-bold text-muted judge-score-col">{{ "%.1f"|format(res.judge_avg) }}%</td>
-                            <td class="text-center"><span class="badge bg-light text-dark border px-3">{{ res.poll_count }}</span></td>
-                            <td class="text-end pe-4 fw-bold text-primary fs-5">{{ "%.2f"|format(res.final_score) }}%</td>
+                            <td class="ps-4 fw-bold">#{{ loop.index }}</td>
+                            <td class="fw-bold text-dark">{{ res['name'] }}</td>
+                            <td class="text-muted small text-uppercase">{{ res['dept'] }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border px-3 py-2">{{ res['judge_count'] }}</span>
+                            </td>
+                            <td class="text-end pe-4 fw-bold text-primary fs-5">
+                                {{ "%.2f"|format(res['judge_avg'] or 0) }}%
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
+    {% else %}
+        <div class="bento-card text-center p-5">
+            <h3 class="fw-bold">Waiting for Judging Data...</h3>
+            <p class="text-muted">Results will appear here as soon as ballots are submitted.</p>
+        </div>
     {% endif %}
 
-    <!-- 7. ROSTERS -->
+    <!-- 7. SYSTEM ROSTER (CANDIDATES & JUDGES) -->
     <div class="row g-4 mt-5">
-        <div class="col-md-6">
-            <div class="table-container p-4 h-100" style="display: block;">
-                <h6 class="fw-bold mb-3">Candidates</h6>
-                {% for can in all_candidates %}
-                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom small fw-bold">
-                    <span>{{ can.name }}</span>
-                    <form action="/hr/delete-candidate/{{ can.id }}" method="POST"><button class="btn btn-sm text-danger p-0 border-0 bg-transparent"><i class="fas fa-trash"></i></button></form>
+        <div class="col-12 col-lg-6">
+            <div class="table-container bg-white shadow-sm">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">Candidates</h5>
+                    <span class="badge bg-primary rounded-pill">{{ all_candidates|length }}</span>
                 </div>
-                {% endfor %}
+                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table table-hover mb-0">
+                        <tbody>
+                            {% for can in all_candidates %}
+                            <tr>
+                                <td class="ps-4 py-3">
+                                    <div class="fw-bold">{{ can.name }}</div>
+                                    <div class="small text-muted text-uppercase">{{ can.department }}</div>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <form action="/hr/delete-candidate/{{ can.id }}" method="POST" onsubmit="return confirm('Delete candidate?');">
+                                        <button type="submit" class="btn btn-sm text-danger border-0 bg-transparent"><i class="fas fa-times"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="table-container p-4 h-100" style="display: block;">
-                <h6 class="fw-bold mb-3">Official Judges</h6>
-                {% for j in all_judges %}
-                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom small fw-bold">
-                    <span>{{ j.name }}</span>
-                    <form action="/hr/delete-judge/{{ j.id }}" method="POST"><button class="btn btn-sm text-danger p-0 border-0 bg-transparent"><i class="fas fa-trash"></i></button></form>
+
+        <div class="col-12 col-lg-6">
+            <div class="table-container bg-white shadow-sm">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">Judging Panel</h5>
+                    <span class="badge bg-secondary rounded-pill">{{ all_judges|length }}</span>
                 </div>
-                {% endfor %}
+                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table table-hover mb-0">
+                        <tbody>
+                            {% for j in all_judges %}
+                            <tr>
+                                <td class="ps-4 fw-bold py-3 text-dark">{{ j.name }}</td>
+                                <td class="text-end pe-4">
+                                    <form action="/hr/delete-judge/{{ j.id }}" method="POST" onsubmit="return confirm('Delete judge?');">
+                                        <button type="submit" class="btn btn-sm text-danger border-0 bg-transparent"><i class="fas fa-times"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Wipe Modal -->
-<div class="modal fade" id="wipeModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered"><div class="modal-content p-4 text-center">
-        <h5 class="fw-bold text-danger">Master Reset</h5><p class="small text-muted">Delete all scores, polls, and audit logs?</p>
-        <form action="/hr/wipe-scores" method="POST"><input type="password" name="wipe_password" class="form-control mb-3 text-center" placeholder="Password" required>
-        <button type="submit" class="btn btn-danger w-100 rounded-pill fw-bold">CONFIRM WIPE</button></form>
-    </div></div>
+<!-- 8. WIPE MODAL -->
+<div class="modal fade" id="wipeModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border shadow-lg" style="border-radius: 30px;">
+            <div class="modal-header bg-danger text-white border-0 py-4 px-4">
+                <h5 class="modal-title fw-bold">System Reset</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/hr/wipe-scores" method="POST">
+                <div class="modal-body p-4 text-center">
+                    <p class="text-muted mb-4">Wipe all scores? This action cannot be undone.</p>
+                    <input type="password" name="wipe_password" class="form-control form-control-lg text-center rounded-pill mb-3" placeholder="Enter HR Password" required autofocus>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="submit" class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow">CONFIRM RESET</button>
+                    <button type="button" class="btn btn-link w-100 text-muted text-decoration-none mt-2" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // 🟢 MASTER TABLE TOGGLE
-    function toggleMasterTable() {
-        const table = document.getElementById('masterTableContainer');
-        const btn = document.getElementById('masterTableBtn');
-        if (table.style.display === 'none' || table.style.display === '') {
-            table.style.display = 'block';
-            btn.innerHTML = '<i class="fas fa-eye-slash me-2"></i> HIDE MASTER RANKINGS TABLE';
-            btn.classList.replace('btn-outline-primary', 'btn-dark');
-            table.scrollIntoView({ behavior: 'smooth' });
-        } else {
-            table.style.display = 'none';
-            btn.innerHTML = '<i class="fas fa-list-ol me-2"></i> SHOW MASTER RANKINGS TABLE';
-            btn.classList.replace('btn-dark', 'btn-outline-primary');
-        }
-    }
-
-    // 🟢 JUDGE SCORE TOGGLE
-    function toggleJudgeScores() {
-        document.querySelectorAll('.judge-score-col').forEach(el => {
-            el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'table-cell' : 'none';
-            if (el.tagName === 'DIV') el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
+    const revealBtn = document.getElementById('revealBtn');
+    if (revealBtn) {
+        revealBtn.addEventListener('click', function() {
+            document.getElementById('podiumContainer').classList.add('reveal-active');
+            this.innerHTML = "🏆 REVEALED";
+            this.disabled = true;
+            this.classList.replace('btn-dark', 'btn-outline-secondary');
         });
     }
 
-    // Reveal Podium Logic
-    document.getElementById('revealBtn').addEventListener('click', function() {
-        const podium = document.getElementById('podiumContainer');
-        podium.style.display = 'flex';
-        setTimeout(() => { podium.classList.add('reveal-active'); }, 10);
-        this.style.display = 'none';
-    });
-
-    // Chart Logic
-    new Chart(document.getElementById('pollChart'), {
-        type: 'bar',
-        data: {
-            labels: {{ chart_labels|tojson }},
-            datasets: [{ data: {{ chart_data|tojson }}, backgroundColor: '#007AFF', borderRadius: 10 }]
-        },
-        options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
-    });
+    // Auto-refresh: Refreshes every 15 seconds UNLESS the wipe modal is open
+    setTimeout(function(){
+        const modalOpen = document.querySelector('.modal.show');
+        if (!modalOpen) {
+            location.reload();
+        }
+    }, 15000);
 </script>
 {% endblock %}

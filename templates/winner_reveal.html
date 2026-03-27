@@ -1,54 +1,195 @@
 {% extends 'layout.html' %}
 {% block content %}
 <style>
-    body { background: #000 !important; color: white; }
-    .reveal-box { display: none; }
-    .reveal-active { display: block; animation: zoomIn 1s; }
-    .winner-name { font-size: 5rem; font-weight: 900; color: #D4AF37; }
-    .rank-title { letter-spacing: 5px; text-transform: uppercase; opacity: 0.7; }
-    @keyframes zoomIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+    /* 🚀 CINEMATIC STAGE SETTINGS */
+    html, body {
+        background: #000 !important; /* Pure Black for Projectors */
+        overflow: hidden !important;
+        height: 100vh !important;
+        color: white;
+    }
+
+    /* Hide standard layout headers/footers to focus on the stage */
+    header, footer, .navbar { display: none !important; }
+
+    .stage-container {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        background: radial-gradient(circle at center, #111 0%, #000 100%);
+    }
+
+    .reveal-box {
+        display: none;
+        width: 100%;
+        max-width: 1200px;
+    }
+
+    /* Animation when a step becomes active */
+    .reveal-active {
+        display: block;
+        animation: cinematicZoom 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes cinematicZoom {
+        0% { opacity: 0; transform: scale(0.7) translateY(50px); filter: blur(15px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+    }
+
+    .rank-label {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #D4AF37; /* Pageant Gold */
+        text-transform: uppercase;
+        letter-spacing: 10px;
+        margin-bottom: 20px;
+        display: block;
+    }
+
+    .winner-name {
+        font-size: clamp(3rem, 10vw, 7rem);
+        font-weight: 900;
+        color: white;
+        letter-spacing: -2px;
+        line-height: 1;
+        margin-bottom: 10px;
+        text-shadow: 0 0 50px rgba(255,255,255,0.2);
+    }
+
+    .winner-dept {
+        font-size: 2.2rem;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 5px;
+    }
+
+    /* 👑 GRAND WINNER SPECIAL STYLING */
+    .grand-title {
+        color: #D4AF37;
+        font-size: 8.5rem !important;
+        text-shadow: 0 0 40px rgba(212, 175, 55, 0.6);
+    }
+
+    .glow-overlay {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 70%);
+        pointer-events: none;
+        animation: pulseGlow 4s infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+        from { opacity: 0.3; }
+        to { opacity: 0.8; }
+    }
+
+    /* CONTROLS */
+    .btn-reveal {
+        background: transparent;
+        border: 2px solid #D4AF37;
+        color: #D4AF37;
+        padding: 15px 45px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        border-radius: 50px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        margin-top: 60px;
+    }
+
+    .btn-reveal:hover {
+        background: #D4AF37;
+        color: black;
+        transform: scale(1.1);
+        box-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+    }
+
+    .exit-link {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        opacity: 0.2;
+        color: white;
+        text-decoration: none;
+        font-size: 0.8rem;
+    }
+    .exit-link:hover { opacity: 1; color: red; }
 </style>
 
-<div class="container text-center py-5">
-    <!-- Initial State -->
-    <div id="step0">
-        <h1 class="display-3 fw-900 mb-5">Final Tabulation Result</h1>
-        <button onclick="showStep(1)" class="btn btn-outline-warning btn-lg px-5 rounded-pill">REVEAL 2ND RUNNER UP</button>
+<div class="stage-container">
+    <div class="glow-overlay" id="glow" style="display:none;"></div>
+
+    <!-- START STATE -->
+    <div id="step0" class="reveal-box reveal-active">
+        <h1 style="font-size: 5rem; font-weight: 900; letter-spacing: -2px;">FINAL RESULTS</h1>
+        <p class="winner-dept" style="color: #D4AF37;">Official Tabulation</p>
+        <button onclick="showStep(1)" class="btn-reveal">Start Announcement</button>
     </div>
 
-    <!-- 2nd Runner Up (Rank 3) -->
+    <!-- 2ND RUNNER UP -->
     <div id="step1" class="reveal-box">
-        <p class="rank-title">2nd Runner Up</p>
-        <h2 class="winner-name">{{ winners[2].name }}</h2>
-        <p class="fs-4">{{ winners[2].dept }}</p>
-        <button onclick="showStep(2)" class="btn btn-warning mt-5">REVEAL 1ST RUNNER UP</button>
+        <span class="rank-label">2nd Runner Up</span>
+        <h2 class="winner-name">{{ winners[2].name if winners|length > 2 else "---" }}</h2>
+        <p class="winner-dept">{{ winners[2].dept if winners|length > 2 else "" }}</p>
+        <button onclick="showStep(2)" class="btn-reveal">Reveal 1st Runner Up</button>
     </div>
 
-    <!-- 1st Runner Up (Rank 2) -->
+    <!-- 1ST RUNNER UP -->
     <div id="step2" class="reveal-box">
-        <p class="rank-title">1st Runner Up</p>
-        <h2 class="winner-name">{{ winners[1].name }}</h2>
-        <p class="fs-4">{{ winners[1].dept }}</p>
-        <button onclick="showStep(3)" class="btn btn-warning mt-5">REVEAL GRAND WINNER</button>
+        <span class="rank-label">1st Runner Up</span>
+        <h2 class="winner-name">{{ winners[1].name if winners|length > 1 else "---" }}</h2>
+        <p class="winner-dept">{{ winners[1].dept if winners|length > 1 else "" }}</p>
+        <button onclick="showStep(3)" class="btn-reveal">Reveal Grand Winner</button>
     </div>
 
-    <!-- Grand Winner (Rank 1) -->
+    <!-- GRAND WINNER -->
     <div id="step3" class="reveal-box">
-        <div class="mb-4">👑</div>
-        <p class="rank-title" style="color: #D4AF37;">BINIBINING COOLAIRE 2026</p>
-        <h2 class="winner-name" style="font-size: 7rem; text-shadow: 0 0 30px rgba(212,175,55,0.5);">{{ winners[0].name }}</h2>
-        <p class="fs-2">{{ winners[0].dept }}</p>
+        <div style="font-size: 6rem; margin-bottom: 10px;">👑</div>
+        <span class="rank-label" style="font-size: 2rem;">Binibining Coolaire 2026</span>
+        <h1 class="winner-name grand-title">{{ winners[0].name if winners|length > 0 else "---" }}</h1>
+        <p class="winner-dept" style="color: white; opacity: 1;">{{ winners[0].dept if winners|length > 0 else "" }}</p>
+
         <div class="mt-5">
-            <a href="/hr-results" class="btn btn-link text-muted">Close Stage</a>
+            <a href="/hr-results" class="btn btn-outline-light rounded-pill px-4 opacity-25">Close Stage</a>
         </div>
     </div>
 </div>
 
+<a href="/hr-results" class="exit-link">EXIT STAGE</a>
+
 <script>
     function showStep(s) {
-        document.querySelectorAll('.reveal-box, #step0').forEach(el => el.style.display = 'none');
-        document.getElementById('step' + s).classList.add('reveal-active');
-        document.getElementById('step' + s).style.display = 'block';
+        // Hide all steps
+        document.querySelectorAll('.reveal-box').forEach(el => {
+            el.classList.remove('reveal-active');
+            el.style.display = 'none';
+        });
+
+        // Show the current step
+        const currentStep = document.getElementById('step' + s);
+        currentStep.style.display = 'block';
+
+        // Trigger the animation
+        setTimeout(() => {
+            currentStep.classList.add('reveal-active');
+        }, 10);
+
+        // Turn on the golden glow background when Grand Winner is revealed
+        if (s === 3) {
+            document.getElementById('glow').style.display = 'block';
+        }
+
+        // Fullscreen the stage on the first button click for a better look
+        if (s === 1) {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) { elem.requestFullscreen(); }
+        }
     }
 </script>
 {% endblock %}
