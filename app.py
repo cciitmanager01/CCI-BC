@@ -41,6 +41,12 @@ CATEGORIES_SPORTS = {
     4: {'name': 'Audience Impact and Overall Presentation', 'max': 20, 'field': 'impact'}
 }
 
+CATEGORIES_QA = {
+    1: {'name': 'Intelligence & Content', 'max': 40, 'field': 'intelligence'},
+    2: {'name': 'Delivery & Wit', 'max': 40, 'field': 'delivery'},
+    3: {'name': 'Overall Impact & Poise', 'max': 20, 'field': 'impact'}
+}
+
 
 # --- MODELS ---
 class Candidate(db.Model):
@@ -96,11 +102,30 @@ class ScoreSports(db.Model):
     total_score = db.Column(db.Float, default=0.0)
 
 
+# Table 4: Separate Q&A Segment Scores
+class ScoreQA(db.Model):
+    __tablename__ = 'hr_scores_qa'
+    id = db.Column(db.Integer, primary_key=True)
+    candidate_id = db.Column(db.Integer, db.ForeignKey('hr_candidates.id'))
+    judge_name = db.Column(db.String(100))
+    intelligence = db.Column(db.Float, default=0.0)
+    delivery = db.Column(db.Float, default=0.0)
+    impact = db.Column(db.Float, default=0.0)
+    total_score = db.Column(db.Float, default=0.0)
+
+
 class EmployeeVote(db.Model):
     __tablename__ = 'hr_employee_votes'
     id = db.Column(db.Integer, primary_key=True)
     candidate_id = db.Column(db.Integer, db.ForeignKey('hr_candidates.id'))
     employee_id = db.Column(db.String(50), unique=True, nullable=False)
+
+
+class Question(db.Model):
+    __tablename__ = 'hr_questions'
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.Text, nullable=False)
+    drawn = db.Column(db.Boolean, default=False)
 
 
 # --- ROUTES ---
@@ -149,7 +174,7 @@ def select_round():
     return render_template('select_round.html')
 
 
-# --- FLOW 1: ROUND 1 (GENERAL SHOW) ---
+# --- SEGMENT 1: GENERAL SHOW (ROUND 1) ---
 
 @app.route('/judge/dashboard')
 def judge_index():
@@ -202,7 +227,7 @@ def score_category(cat_id):
                            candidates=candidates, existing_scores=existing_scores, back_endpoint='judge_index')
 
 
-# --- FLOW 2: CREATIVE COSTUME ---
+# --- SEGMENT 2: CREATIVE COSTUME ---
 
 @app.route('/judge/costume/dashboard')
 def judge_index_costume():
@@ -254,7 +279,7 @@ def score_category_costume(cat_id):
                            candidates=candidates, existing_scores=existing_scores, back_endpoint='judge_index_costume')
 
 
-# --- FLOW 3: SPORTS ATTIRE ---
+# --- SEGMENT 3: SPORTS ATTIRE ---
 
 @app.route('/judge/sports/dashboard')
 def judge_index_sports():
@@ -306,6 +331,58 @@ def score_category_sports(cat_id):
                            candidates=candidates, existing_scores=existing_scores, back_endpoint='judge_index_sports')
 
 
+# --- SEGMENT 4: Q&A SEGMENT ---
+
+@app.route('/judge/qa/dashboard')
+def judge_index_qa():
+    if session.get('role') != 'judge' or not session.get('judge_name'):
+        return redirect(url_for('login'))
+
+    judge_name = session.get('judge_name')
+    total_candidates = Candidate.query.count() or 1
+
+    progress = {}
+    for i, cat in CATEGORIES_QA.items():
+        field = getattr(ScoreQA, cat['field'])
+        count = ScoreQA.query.filter(ScoreQA.judge_name == judge_name, field > 0).count()
+        progress[i] = {'name': cat['name'], 'count': count, 'total': total_candidates}
+
+    return render_template('judge_index.html', progress=progress, round_title="Q&A Segment",
+                           score_endpoint='score_category_qa')
+
+
+@app.route('/judge/qa/category/<int:cat_id>', methods=['GET', 'POST'])
+def score_category_qa(cat_id):
+    if session.get('role') != 'judge' or not session.get('judge_name'):
+        return redirect(url_for('login'))
+
+    cat = CATEGORIES_QA.get(cat_id)
+    judge_name = session.get('judge_name')
+    candidates = Candidate.query.all()
+
+    if request.method == 'POST':
+        for can in candidates:
+            val = float(request.form.get(str(can.id), 0))
+            score_row = ScoreQA.query.filter_by(candidate_id=can.id, judge_name=judge_name).first()
+            if not score_row:
+                score_row = ScoreQA(candidate_id=can.id, judge_name=judge_name)
+                db.session.add(score_row)
+
+            setattr(score_row, cat['field'], val)
+            score_row.total_score = (score_row.intelligence or 0) + (score_row.delivery or 0) + \
+                                    (score_row.impact or 0)
+
+        db.session.commit()
+        flash(f"Scores for {cat['name']} saved!", "success")
+        return redirect(url_for('judge_index_qa'))
+
+    existing_scores = {s.candidate_id: getattr(s, cat['field'])
+                       for s in ScoreQA.query.filter_by(judge_name=judge_name).all()}
+
+    return render_template('score_category.html', cat=cat, cat_id=cat_id,
+                           candidates=candidates, existing_scores=existing_scores, back_endpoint='judge_index_qa')
+
+
 # --- EMPLOYEE POLL ---
 
 @app.route('/poll', methods=['GET', 'POST'])
@@ -334,6 +411,32 @@ def employee_poll():
 
 @app.route('/hr-results')
 def hr_results():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    # Overall dashboard is now the landing tabulation screen
+    return redirect(url_for('hr_results_overall'))
+
+
+@app.route('/hr-results/overall')
+def hr_results_overall():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+
+    results = get_tabulated_results_overall()
+    all_candidates = Candidate.query.order_by(Candidate.name).all()
+    all_judges = Judge.query.order_by(Judge.name).all()
+
+    return render_template('hr_results.html',
+                           results=results,
+                           all_candidates=all_candidates,
+                           all_judges=all_judges,
+                           total_emp_votes=0,
+                           active_tab='overall',
+                           reveal_endpoint='winner_reveal_overall',
+                           export_endpoint='export_excel_overall',
+                           wipe_endpoint='wipe_scores_overall')
+
+
+@app.route('/hr-results/general')
+def hr_results_general():
     if session.get('role') != 'hr': return redirect(url_for('login'))
 
     results, total_votes = get_tabulated_results()
@@ -389,6 +492,25 @@ def hr_results_sports():
                            wipe_endpoint='wipe_scores_sports')
 
 
+@app.route('/hr-results/qa')
+def hr_results_qa():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+
+    results = get_tabulated_results_qa()
+    all_candidates = Candidate.query.order_by(Candidate.name).all()
+    all_judges = Judge.query.order_by(Judge.name).all()
+
+    return render_template('hr_results.html',
+                           results=results,
+                           all_candidates=all_candidates,
+                           all_judges=all_judges,
+                           total_emp_votes=0,
+                           active_tab='qa',
+                           reveal_endpoint='winner_reveal_qa',
+                           export_endpoint='export_excel_qa',
+                           wipe_endpoint='wipe_scores_qa')
+
+
 # --- MANAGEMENT ---
 
 @app.route('/hr/add-candidate', methods=['GET', 'POST'])
@@ -419,6 +541,7 @@ def delete_candidate(id):
     Score.query.filter_by(candidate_id=id).delete()
     ScoreCostume.query.filter_by(candidate_id=id).delete()
     ScoreSports.query.filter_by(candidate_id=id).delete()
+    ScoreQA.query.filter_by(candidate_id=id).delete()
     EmployeeVote.query.filter_by(candidate_id=id).delete()
     db.session.delete(Candidate.query.get_or_404(id))
     db.session.commit()
@@ -432,6 +555,7 @@ def delete_judge(id):
     Score.query.filter_by(judge_name=judge.name).delete()
     ScoreCostume.query.filter_by(judge_name=judge.name).delete()
     ScoreSports.query.filter_by(judge_name=judge.name).delete()
+    ScoreQA.query.filter_by(judge_name=judge.name).delete()
     db.session.delete(judge)
     db.session.commit()
     return redirect(url_for('hr_results'))
@@ -447,7 +571,7 @@ def wipe_scores():
         db.session.query(EmployeeVote).delete()
         db.session.commit()
         flash("All Round 1 scores and votes wiped!", "success")
-    return redirect(url_for('hr_results'))
+    return redirect(url_for('hr_results_general'))
 
 
 @app.route('/hr/costume/wipe-scores', methods=['POST'])
@@ -470,6 +594,30 @@ def wipe_scores_sports():
     return redirect(url_for('hr_results_sports'))
 
 
+@app.route('/hr/qa/wipe-scores', methods=['POST'])
+def wipe_scores_qa():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    if request.form.get('wipe_password') == 'hr@55':
+        db.session.query(ScoreQA).delete()
+        db.session.commit()
+        flash("All Q&A Segment scores wiped!", "success")
+    return redirect(url_for('hr_results_qa'))
+
+
+@app.route('/hr/overall/wipe-scores', methods=['POST'])
+def wipe_scores_overall():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    if request.form.get('wipe_password') == 'hr@55':
+        db.session.query(Score).delete()
+        db.session.query(ScoreCostume).delete()
+        db.session.query(ScoreSports).delete()
+        db.session.query(ScoreQA).delete()
+        db.session.query(EmployeeVote).delete()
+        db.session.commit()
+        flash("System Reset: All scores across all rounds have been wiped!", "success")
+    return redirect(url_for('hr_results_overall'))
+
+
 # --- STAGE REVEALS ---
 
 @app.route('/hr/reveal')
@@ -490,6 +638,20 @@ def winner_reveal_costume():
 def winner_reveal_sports():
     if session.get('role') != 'hr': return redirect(url_for('login'))
     results = get_tabulated_results_sports()
+    return render_template('winner_reveal.html', winners=results)
+
+
+@app.route('/hr/qa/reveal')
+def winner_reveal_qa():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    results = get_tabulated_results_qa()
+    return render_template('winner_reveal.html', winners=results)
+
+
+@app.route('/hr/overall/reveal')
+def winner_reveal_overall():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    results = get_tabulated_results_overall()
     return render_template('winner_reveal.html', winners=results)
 
 
@@ -665,6 +827,91 @@ def export_excel_sports():
     return generate_download(wb, "Binibining_Coolaire_2026_Sports_Tabulations.xlsx")
 
 
+@app.route('/hr/qa/export-excel')
+def export_excel_qa():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+
+    wb = Workbook()
+    ws1 = wb.active
+    ws1.title = "Q&A Tabulation"
+
+    headers1 = [
+        "Rank", "Candidate Name", "Department",
+        "Avg Intelligence & Content (Max 40)", "Avg Delivery & Wit (Max 40)",
+        "Avg Overall Impact & Poise (Max 20)",
+        "Final Score (Avg Total)", "Judges Count"
+    ]
+    ws1.append(headers1)
+
+    results = get_tabulated_results_qa()
+    for rank, res in enumerate(results, start=1):
+        scores = ScoreQA.query.filter_by(candidate_id=res['id']).all()
+        judge_count = len(scores)
+
+        if judge_count > 0:
+            avg_in = sum(s.intelligence or 0.0 for s in scores) / judge_count
+            avg_de = sum(s.delivery or 0.0 for s in scores) / judge_count
+            avg_im = sum(s.impact or 0.0 for s in scores) / judge_count
+        else:
+            avg_in = avg_de = avg_im = 0.0
+
+        ws1.append([
+            rank, res['name'], res['dept'],
+            round(avg_in, 2), round(avg_de, 2), round(avg_im, 2),
+            res['final_score'], res['judge_count']
+        ])
+
+    ws2 = wb.create_sheet(title="Q&A Detailed Ballots")
+    headers2 = [
+        "Candidate Name", "Department", "Judge Name",
+        "Intelligence & Content", "Delivery & Wit",
+        "Overall Impact & Poise", "Total Score"
+    ]
+    ws2.append(headers2)
+
+    all_scores = db.session.query(
+        Candidate.name, Candidate.department, ScoreQA.judge_name,
+        ScoreQA.intelligence, ScoreQA.delivery, ScoreQA.impact,
+        ScoreQA.total_score
+    ).join(ScoreQA, Candidate.id == ScoreQA.candidate_id).order_by(Candidate.name, ScoreQA.judge_name).all()
+
+    for s in all_scores:
+        ws2.append([s[0], s[1], s[2], s[3], s[4], s[5], s[6]])
+
+    format_sheets(wb, [ws1, ws2])
+    return generate_download(wb, "Binibining_Coolaire_2026_QA_Tabulations.xlsx")
+
+
+@app.route('/hr/overall/export-excel')
+def export_excel_overall():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+
+    wb = Workbook()
+    ws1 = wb.active
+    ws1.title = "Overall Final Tabulation"
+
+    headers1 = [
+        "Rank", "Candidate Name", "Department",
+        "Round 1 Avg (General) %",
+        "Round 2 Avg (Costume) %",
+        "Round 2 Avg (Sports) %",
+        "Round 2 Avg (Q&A) %",
+        "Final Combined Score (Avg Total %)"
+    ]
+    ws1.append(headers1)
+
+    results = get_tabulated_results_overall()
+    for rank, res in enumerate(results, start=1):
+        ws1.append([
+            rank, res['name'], res['dept'],
+            res['r1'], res['costume'], res['sports'], res['qa'],
+            res['final_score']
+        ])
+
+    format_sheets(wb, [ws1])
+    return generate_download(wb, "Binibining_Coolaire_2026_Overall_Final_Tabulations.xlsx")
+
+
 def format_sheets(wb, sheets):
     header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
     header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
@@ -708,7 +955,78 @@ def generate_download(wb, filename):
     )
 
 
-# --- MASTER TABULATION LOGIC ---
+# --- Q&A SEGMENT ENDPOINTS ---
+
+@app.route('/hr/questions', methods=['GET', 'POST'])
+def hr_questions():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        question_text = request.form.get('question_text', '').strip()
+        if question_text:
+            db.session.add(Question(text=question_text))
+            db.session.commit()
+            flash("New question added to the bank!", "success")
+        return redirect(url_for('hr_questions'))
+
+    questions = Question.query.order_by(Question.id.desc()).all()
+    return render_template('hr_questions.html', questions=questions)
+
+
+@app.route('/hr/questions/edit/<int:id>', methods=['POST'])
+def edit_question(id):
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    question = Question.query.get_or_404(id)
+    question_text = request.form.get('question_text', '').strip()
+    if question_text:
+        question.text = question_text
+        db.session.commit()
+        flash("Question updated successfully!", "success")
+    return redirect(url_for('hr_questions'))
+
+
+@app.route('/hr/questions/delete/<int:id>', methods=['POST'])
+def delete_question(id):
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    question = Question.query.get_or_404(id)
+    db.session.delete(question)
+    db.session.commit()
+    flash("Question deleted.", "success")
+    return redirect(url_for('hr_questions'))
+
+
+@app.route('/hr/questions/reset-drawn', methods=['POST'])
+def reset_drawn_questions():
+    if session.get('role') != 'hr': return redirect(url_for('login'))
+    db.session.query(Question).update({Question.drawn: False})
+    db.session.commit()
+    flash("All questions marked as undrawn!", "success")
+    return redirect(url_for('hr_questions'))
+
+
+@app.route('/stage/qa')
+def stage_qa():
+    return render_template('stage_qa.html')
+
+
+@app.route('/stage/qa/draw-api', methods=['POST'])
+def draw_question_api():
+    question = Question.query.filter_by(drawn=False).order_by(func.random()).first()
+
+    if not question:
+        return {"status": "empty", "message": "All questions have been drawn! Reset the deck from the Q&A Admin Bank."}
+
+    question.drawn = True
+    db.session.commit()
+
+    return {
+        "status": "success",
+        "id": question.id,
+        "text": question.text
+    }
+
+
+# --- MASTER TABULATION LOGICS ---
 
 def get_tabulated_results():
     actual_vote_count = db.session.query(func.count(EmployeeVote.id)).scalar() or 0
@@ -776,6 +1094,63 @@ def get_tabulated_results_sports():
         })
 
     processed.sort(key=lambda x: x['judge_avg'], reverse=True)
+    return processed
+
+
+def get_tabulated_results_qa():
+    raw_data = db.session.query(
+        Candidate.id, Candidate.name, Candidate.department,
+        func.avg(ScoreQA.total_score).label('judge_avg'),
+        func.count(func.distinct(ScoreQA.judge_name)).label('judge_count')
+    ).join(ScoreQA, isouter=True).group_by(Candidate.id).all()
+
+    processed = []
+    for r in raw_data:
+        can_id = r[0]
+        j_avg = float(r[3]) if r[3] is not None else 0.0
+
+        processed.append({
+            'id': can_id, 'name': r[1], 'dept': r[2],
+            'judge_avg': round(j_avg, 2), 'judge_count': r[4],
+            'final_score': round(j_avg, 2)
+        })
+
+    processed.sort(key=lambda x: x['judge_avg'], reverse=True)
+    return processed
+
+
+def get_tabulated_results_overall():
+    candidates = Candidate.query.order_by(Candidate.name).all()
+
+    r1_list, _ = get_tabulated_results()
+    r1_dict = {item['id']: item['judge_avg'] for item in r1_list}
+
+    costume_dict = {item['id']: item['judge_avg'] for item in get_tabulated_results_costume()}
+    sports_dict = {item['id']: item['judge_avg'] for item in get_tabulated_results_sports()}
+    qa_dict = {item['id']: item['judge_avg'] for item in get_tabulated_results_qa()}
+
+    processed = []
+    for c in candidates:
+        r1 = r1_dict.get(c.id, 0.0)
+        costume = costume_dict.get(c.id, 0.0)
+        sports = sports_dict.get(c.id, 0.0)
+        qa = qa_dict.get(c.id, 0.0)
+
+        final_score = (r1 + costume + sports + qa) / 4.0
+
+        processed.append({
+            'id': c.id,
+            'name': c.name,
+            'dept': c.department,
+            'r1': r1,
+            'costume': costume,
+            'sports': sports,
+            'qa': qa,
+            'final_score': round(final_score, 2),
+            'judge_count': "-"  # Overall tabulation spans multiple categories
+        })
+
+    processed.sort(key=lambda x: x['final_score'], reverse=True)
     return processed
 
 
