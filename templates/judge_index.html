@@ -140,7 +140,9 @@
     <div class="judge-welcome">
         <span class="judge-name-badge">Official Judge Panel</span>
         <h1 class="fw-900" style="letter-spacing: -1.5px;">Welcome, {{ session.judge_name }}</h1>
-        <p class="text-muted">Please complete all 5 categories to finalize your ballot.</p>
+        <p class="text-muted">
+            Currently Scoring: <strong>{% if is_round2 %}Round 2 (Costume & Sports){% else %}Round 1 (General Show){% endif %}</strong>
+        </p>
     </div>
 
     <!-- Category Grid -->
@@ -172,7 +174,7 @@
                 </div>
 
                 <div>
-                    <a href="{{ url_for('score_category', cat_id=id) }}"
+                    <a href="{{ url_for(score_endpoint|default('score_category'), cat_id=id) }}"
                        class="btn-judge-action {% if is_done %}btn-completed{% else %}btn-start{% endif %}">
                         {% if is_done %}Review Scores{% else %}Enter Category{% endif %}
                     </a>
@@ -191,15 +193,20 @@
                 {% if data.count == data.total %}{% set _ = total_done.append(1) %}{% endif %}
             {% endfor %}
 
-            {% if total_done|length == 5 %}
+            {% if total_done|length == progress|length %}
                 <div class="alert alert-success rounded-pill px-4 py-2 border-0 shadow-sm animate__animated animate__pulse animate__infinite">
                     <i class="fas fa-star me-2"></i> All categories completed! You may now exit.
                 </div>
             {% endif %}
 
-            <a href="/logout" class="btn btn-dark rounded-pill px-5 py-3 fw-bold shadow-sm">
-                <i class="fas fa-sign-out-alt me-2"></i> Exit Judging Portal
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('select_round') }}" class="btn btn-outline-dark rounded-pill px-4 py-3 fw-bold shadow-sm">
+                    <i class="fas fa-exchange-alt me-2"></i> Switch Round
+                </a>
+                <a href="/logout" class="btn btn-dark rounded-pill px-4 py-3 fw-bold shadow-sm">
+                    <i class="fas fa-sign-out-alt me-2"></i> Exit Judging Portal
+                </a>
+            </div>
 
             <p class="small text-muted mt-2">
                 <i class="fas fa-info-circle me-1"></i> Technical issues? Please alert the <span class="text-dark fw-bold">IT Committee</span>.

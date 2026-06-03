@@ -1,0 +1,149 @@
+{% extends 'layout.html' %}
+{% block content %}
+<style>
+    /* 🚀 PREMIUM ROUND SELECTION */
+    html, body {
+        overflow: hidden !important;
+        height: 100% !important;
+    }
+
+    .activation-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(30px) saturate(200%);
+        -webkit-backdrop-filter: blur(30px) saturate(200%);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 45px;
+        padding: clamp(35px, 5vh, 50px) 40px;
+        box-shadow: 0 40px 80px rgba(0,0,0,0.12);
+        max-width: 480px;
+        width: 100%;
+        text-align: center;
+        animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes cardEntrance {
+        from { opacity: 0; transform: scale(0.92) translateY(30px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .icon-seal {
+        width: 80px; height: 80px;
+        background: white;
+        border-radius: 24px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 2.2rem;
+        box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+        color: #1d1d1f;
+    }
+
+    .activation-title {
+        font-weight: 900;
+        font-size: 1.8rem;
+        letter-spacing: -1.2px;
+        color: #1d1d1f;
+        margin-bottom: 8px;
+    }
+
+    .activation-subtitle {
+        color: #86868b;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 30px;
+        line-height: 1.5;
+    }
+
+    .btn-round {
+        display: block;
+        width: 100%;
+        padding: 16px;
+        border-radius: 22px;
+        font-weight: 800;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        margin-bottom: 12px;
+        border: none;
+    }
+
+    .btn-round-r1 {
+        background: #f5f5f7;
+        color: #1d1d1f !important;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .btn-round-r1:hover {
+        background: #e5e5ea;
+        transform: translateY(-3px);
+    }
+
+    .btn-round-costume {
+        background: #1d1d1f;
+        color: white !important;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .btn-round-costume:hover {
+        background: #000;
+        transform: translateY(-3px);
+    }
+
+    .btn-round-sports {
+        background: var(--pageant-blue);
+        color: white !important;
+        box-shadow: 0 10px 20px rgba(0, 122, 255, 0.2);
+    }
+
+    .btn-round-sports:hover {
+        background: #0062cc;
+        transform: translateY(-3px);
+    }
+
+    .btn-exit {
+        margin-top: 15px;
+        color: #86868b;
+        text-decoration: none;
+        font-weight: 800;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: color 0.2s;
+        display: inline-block;
+        padding: 8px 20px;
+        border-radius: 100px;
+    }
+
+    .btn-exit:hover {
+        color: #FF3B30;
+        background: rgba(255, 59, 48, 0.05);
+    }
+</style>
+
+<div class="activation-card">
+    <div class="icon-seal">⚖️</div>
+    <h2 class="activation-title">Select Competition Segment</h2>
+    <p class="activation-subtitle">
+        Choose which category segment you wish to score or review at this moment.
+    </p>
+
+    <div class="mb-4">
+        <a href="{{ url_for('judge_index') }}" class="btn-round btn-round-r1">
+            Round 1: General Show
+        </a>
+        <a href="{{ url_for('judge_index_costume') }}" class="btn-round btn-round-costume">
+            Creative Costume
+        </a>
+        <a href="{{ url_for('judge_index_sports') }}" class="btn-round btn-round-sports">
+            Welcome Ramp (Sports)
+        </a>
+    </div>
+
+    <div class="d-flex flex-column align-items-center">
+        <a href="/logout" class="btn-exit">
+            <i class="fas fa-chevron-left me-1"></i> Change Identity
+        </a>
+    </div>
+</div>
+{% endblock %}

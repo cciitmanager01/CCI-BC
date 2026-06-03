@@ -166,7 +166,7 @@
 
     <!-- Bulk Scoring Form -->
     <form method="POST" id="bulkForm">
-        
+
         {% for can in candidates %}
         <div class="scoring-row shadow-sm">
             <!-- Candidate Meta -->
@@ -177,15 +177,15 @@
 
             <!-- Slider Logic -->
             <div class="slider-container">
-                <input type="range" 
-                       name="{{ can.id }}" 
-                       class="premium-range" 
-                       min="0" 
-                       max="{{ cat.max }}" 
-                       step="0.5" 
+                <input type="range"
+                       name="{{ can.id }}"
+                       class="premium-range"
+                       min="0"
+                       max="{{ cat.max }}"
+                       step="0.5"
                        value="{{ existing_scores.get(can.id) or 0.0 }}"
                        oninput="updateBubble('{{ can.id }}', this.value)">
-                
+
                 <div class="score-bubble" id="bubble-{{ can.id }}">
                     {{ "%.1f"|format(existing_scores.get(can.id) or 0.0) }}
                 </div>
@@ -199,7 +199,8 @@
                 <i class="fas fa-check-circle me-2"></i> Save All {{ cat.name }} Scores
             </button>
             <br>
-            <a href="{{ url_for('judge_index') }}" class="btn btn-link mt-4 text-muted text-decoration-none fw-bold">
+            <!-- Dynamic cancel link to handle Round 1 and Round 2 panels -->
+            <a href="{{ url_for(back_endpoint|default('judge_index')) }}" class="btn btn-link mt-4 text-muted text-decoration-none fw-bold">
                 <i class="fas fa-arrow-left me-1"></i> Cancel & Return to Categories
             </a>
         </div>
