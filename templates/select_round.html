@@ -3,8 +3,8 @@
 <style>
     /* 🚀 PREMIUM ROUND SELECTION */
     html, body {
-        overflow: hidden !important;
-        height: 100% !important;
+        overflow: auto !important;
+        height: auto !important;
     }
 
     .activation-card {
@@ -19,6 +19,7 @@
         width: 100%;
         text-align: center;
         animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        margin: 40px auto;
     }
 
     @keyframes cardEntrance {
@@ -101,6 +102,17 @@
         transform: translateY(-3px);
     }
 
+    .btn-round-qa {
+        background: var(--pageant-gold);
+        color: black !important;
+        box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
+    }
+
+    .btn-round-qa:hover {
+        background: #bfa02c;
+        transform: translateY(-3px);
+    }
+
     .btn-exit {
         margin-top: 15px;
         color: #86868b;
@@ -137,6 +149,9 @@
         </a>
         <a href="{{ url_for('judge_index_sports') }}" class="btn-round btn-round-sports">
             Welcome Ramp (Sports)
+        </a>
+        <a href="{{ url_for('judge_index_qa') }}" class="btn-round btn-round-qa">
+            Q&A Segment
         </a>
     </div>
 

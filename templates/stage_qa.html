@@ -1,0 +1,160 @@
+{% extends 'layout.html' %}
+{% block content %}
+<style>
+    /* 🚀 FULLSCREEN CINEMATIC STAGE THEME */
+    html, body {
+        background: #000 !important;
+        overflow: hidden !important;
+        height: 100vh !important;
+        color: white;
+    }
+
+    header, footer, .navbar { display: none !important; }
+
+    .stage-qa-container {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        background: radial-gradient(circle at center, #151515 0%, #000 100%);
+        padding: 40px;
+    }
+
+    .qa-box {
+        width: 100%;
+        max-width: 1000px;
+        min-height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 40px;
+    }
+
+    .qa-text-display {
+        font-size: clamp(2rem, 5vw, 4rem);
+        font-weight: 900;
+        line-height: 1.3;
+        letter-spacing: -1px;
+        color: #fff;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        transition: all 0.3s;
+    }
+
+    /* Dramatic Settled Gold Shimmer */
+    .qa-drawn {
+        color: var(--pageant-gold);
+        text-shadow: 0 0 40px rgba(212, 175, 55, 0.4);
+        animation: settledGlow 1s ease-out forwards;
+    }
+
+    @keyframes settledGlow {
+        from { transform: scale(0.9); opacity: 0; filter: blur(10px); }
+        to { transform: scale(1); opacity: 1; filter: blur(0); }
+    }
+
+    .btn-draw-stage {
+        background: transparent;
+        border: 2px solid var(--pageant-gold);
+        color: var(--pageant-gold);
+        padding: 20px 50px;
+        font-size: 1.2rem;
+        font-weight: 900;
+        border-radius: 100px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        transition: all 0.4s;
+        box-shadow: 0 0 30px rgba(212, 175, 55, 0.1);
+        cursor: pointer;
+    }
+
+    .btn-draw-stage:hover {
+        background: var(--pageant-gold);
+        color: black;
+        box-shadow: 0 0 50px rgba(212, 175, 55, 0.4);
+        transform: translateY(-3px);
+    }
+
+    .btn-draw-stage:disabled {
+        opacity: 0.3;
+        pointer-events: none;
+    }
+</style>
+
+<div class="stage-qa-container">
+    <span class="text-uppercase fw-bold mb-4" style="color: var(--pageant-gold); letter-spacing: 12px; font-size: 1.2rem;">
+        Official Q&A Segment
+    </span>
+
+    <div class="qa-box">
+        <div id="qaDisplay" class="qa-text-display">
+            READY TO DRAW QUESTION
+        </div>
+    </div>
+
+    <button id="drawBtn" class="btn-draw-stage" onclick="executeStageDraw()">
+        <i class="fas fa-random me-2"></i> Draw Question
+    </button>
+</div>
+
+<script>
+    // Shuffling vocabulary lists to build stage suspense
+    const shufflingTexts = [
+        "FORMULATING QUESTION...",
+        "CHOSING CORRESPONDING TOPIC...",
+        "SELECTING FROM DECK...",
+        "LOADING ENVELOPE...",
+        "DETERMINING NEXT QUERY...",
+        "SHUFFLING SYSTEM QUESTIONS..."
+    ];
+
+    function executeStageDraw() {
+        const display = document.getElementById('qaDisplay');
+        const button = document.getElementById('drawBtn');
+
+        // Request Fullscreen on first draw action for stage integration
+        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        }
+
+        // Lock button interaction
+        button.disabled = true;
+        display.classList.remove('qa-drawn');
+
+        // Fetch drawn question from backend API
+        fetch('/stage/qa/draw-api', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Shuffling Suspense Loop (cycles through phrases for 2.5 seconds)
+                    let counter = 0;
+                    const shuffleInterval = setInterval(() => {
+                        display.innerText = shufflingTexts[Math.floor(Math.random() * shufflingTexts.length)];
+                        display.style.opacity = Math.random() > 0.5 ? "0.5" : "1";
+                    }, 120);
+
+                    setTimeout(() => {
+                        clearInterval(shuffleInterval);
+
+                        // Settle on official text and apply styling
+                        display.innerText = data.text;
+                        display.style.opacity = "1";
+                        display.classList.add('qa-drawn');
+
+                        button.disabled = false;
+                    }, 2400);
+
+                } else {
+                    // Alert if deck is empty
+                    display.innerText = data.message;
+                    button.disabled = false;
+                }
+            })
+            .catch(err => {
+                display.innerText = "CONNECTION FAILURE. TRY AGAIN.";
+                button.disabled = false;
+            });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends 'layout.html' %}
+{% block content %}
+<style>
+    html, body {
+        overflow: auto !important;
+        height: auto !important;
+    }
+    .qa-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 20px;
+        width: 100%;
+    }
+    .qa-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(25px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        border-radius: 40px;
+        padding: 40px;
+        box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+        max-width: 650px;
+        width: 100%;
+    }
+    .premium-textarea {
+        width: 100%;
+        background: #f5f5f7;
+        border: 2px solid transparent;
+        border-radius: 20px;
+        padding: 15px 20px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1d1d1f;
+        outline: none;
+        resize: none;
+        transition: all 0.3s;
+    }
+    .premium-textarea:focus {
+        background: #fff;
+        border-color: #007AFF;
+    }
+    .btn-action-qa {
+        padding: 12px 24px;
+        border-radius: 100px;
+        font-weight: 800;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .question-row {
+        background: white;
+        border-radius: 20px;
+        padding: 15px 20px;
+        border: 1px solid rgba(0,0,0,0.04);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    /* Modal configuration to match dynamic layout style */
+    .modal-backdrop { display: none !important; }
+    .modal { background: rgba(0, 0, 0, 0.3); z-index: 9999 !important; }
+</style>
+
+<div class="qa-container">
+    <div class="qa-card shadow-lg">
+        <div class="text-center">
+            <span class="fs-1">🎙️</span>
+            <h2 class="fw-900 mt-2">Q&A Questionnaire Bank</h2>
+            <p class="text-muted small fw-bold text-uppercase mb-4">Official Segment Controller</p>
+        </div>
+
+        <!-- Section Actions -->
+        <div class="d-flex flex-wrap gap-2 justify-content-center mb-4">
+            <a href="/stage/qa" target="_blank" class="btn btn-dark btn-action-qa">
+                <i class="fas fa-desktop me-1"></i> Open Stage Screen
+            </a>
+            <form action="/hr/questions/reset-drawn" method="POST" onsubmit="return confirm('Reset the drawn status of all questions?');">
+                <button type="submit" class="btn btn-outline-secondary btn-action-qa">
+                    <i class="fas fa-redo me-1"></i> Reset Drawn Deck
+                </button>
+            </form>
+        </div>
+
+        <!-- Add Question Form -->
+        <form method="POST" class="mb-5">
+            <div class="mb-3">
+                <label class="small text-muted fw-bold text-uppercase mb-2">Create New Question Entry</label>
+                <textarea name="question_text" class="premium-textarea" rows="3" placeholder="Write Q&A text here..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold">Add to Active Bank</button>
+        </form>
+
+        <!-- Current Bank List -->
+        <div>
+            <h5 class="fw-bold mb-3 small text-muted text-uppercase">Question Bank List ({{ questions|length }})</h5>
+            {% for q in questions %}
+                <div class="question-row shadow-sm">
+                    <div class="pe-3" style="flex-grow: 1;">
+                        <p class="mb-1 text-dark fw-semibold" style="font-size: 0.95rem;">{{ q.text }}</p>
+                        {% if q.drawn %}
+                            <span class="badge bg-danger rounded-pill" style="font-size: 0.6rem;">ALREADY DRAWN</span>
+                        {% else %}
+                            <span class="badge bg-success rounded-pill" style="font-size: 0.6rem;">AVAILABLE</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex align-items-center">
+                        <!-- EDIT BUTTON (Triggers Modal) -->
+                        <button type="button" class="btn text-primary bg-transparent border-0 me-2" data-bs-toggle="modal" data-bs-target="#editModal-{{ q.id }}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+
+                        <!-- DELETE BUTTON -->
+                        <form action="/hr/questions/delete/{{ q.id }}" method="POST" onsubmit="return confirm('Delete this question?');">
+                            <button type="submit" class="btn text-danger bg-transparent border-0"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- EDIT QUESTION MODAL -->
+                <div class="modal fade" id="editModal-{{ q.id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="false">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border shadow-lg" style="border-radius: 30px;">
+                            <div class="modal-header bg-dark text-white border-0 py-4 px-4">
+                                <h5 class="modal-title fw-bold">Edit Question</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form action="/hr/questions/edit/{{ q.id }}" method="POST">
+                                <div class="modal-body p-4 text-start">
+                                    <label class="small text-muted fw-bold text-uppercase mb-2">Question Text</label>
+                                    <textarea name="question_text" class="premium-textarea w-100" rows="4" required>{{ q.text }}</textarea>
+                                </div>
+                                <div class="modal-footer border-0 p-4 pt-0">
+                                    <button type="submit" class="btn btn-dark w-100 rounded-pill py-3 fw-bold shadow">SAVE CHANGES</button>
+                                    <button type="button" class="btn btn-link w-100 text-muted text-decoration-none mt-2" data-bs-dismiss="modal">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            {% else %}
+                <p class="text-center text-muted py-4">No questions added yet.</p>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="/hr-results/overall" class="text-muted text-decoration-none fw-bold small text-uppercase">
+                <i class="fas fa-arrow-left me-1"></i> Dashboard Command Center
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

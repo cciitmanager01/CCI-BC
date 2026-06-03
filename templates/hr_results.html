@@ -91,9 +91,12 @@
             <div class="d-flex flex-wrap justify-content-center justify-content-md-start align-items-center gap-2 mt-2">
                 <span class="badge bg-success rounded-pill px-3 py-2">LIVE DATA</span>
 
-                <!-- 3-Way Tab Selector -->
-                <div class="ms-md-2 d-inline-flex gap-1 bg-white p-1 rounded-pill border shadow-sm">
-                    <a href="/hr-results" class="btn btn-sm {% if active_tab == 'general' %}btn-dark{% else %}btn-outline-secondary border-0{% endif %} rounded-pill px-3 py-1 fw-bold">
+                <!-- 5-Way Tab Selector (Includes Dynamic Toggle Groups) -->
+                <div class="ms-md-2 d-inline-flex flex-wrap gap-1 bg-white p-1 rounded-pill border shadow-sm">
+                    <a href="/hr-results/overall" class="btn btn-sm {% if active_tab == 'overall' %}btn-dark{% else %}btn-outline-secondary border-0{% endif %} rounded-pill px-3 py-1 fw-bold">
+                        Overall Final
+                    </a>
+                    <a href="/hr-results/general" class="btn btn-sm {% if active_tab == 'general' %}btn-dark{% else %}btn-outline-secondary border-0{% endif %} rounded-pill px-3 py-1 fw-bold">
                         General Show
                     </a>
                     <a href="/hr-results/costume" class="btn btn-sm {% if active_tab == 'costume' %}btn-dark{% else %}btn-outline-secondary border-0{% endif %} rounded-pill px-3 py-1 fw-bold">
@@ -101,6 +104,9 @@
                     </a>
                     <a href="/hr-results/sports" class="btn btn-sm {% if active_tab == 'sports' %}btn-dark{% else %}btn-outline-secondary border-0{% endif %} rounded-pill px-3 py-1 fw-bold">
                         Sports Attire
+                    </a>
+                    <a href="/hr-results/qa" class="btn btn-sm {% if active_tab == 'qa' %}btn-dark{% else %}btn-outline-secondary border-0{% endif %} rounded-pill px-3 py-1 fw-bold">
+                        Q&A Segment
                     </a>
                 </div>
             </div>
@@ -116,13 +122,18 @@
             <a href="/hr/add-candidate" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Add Candidate</a>
             <a href="/hr/add-judge" class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm">Add Judge</a>
 
+            <!-- Prominent Dynamic Add Question Button -->
+            <a href="/hr/questions" class="btn btn-warning rounded-pill px-4 fw-bold shadow-sm text-dark">
+                <i class="fas fa-plus-circle me-1"></i> Add Question
+            </a>
+
             <!-- Dynamic Reveal Route -->
-            <a href="{{ url_for(reveal_endpoint|default('winner_reveal')) }}" class="btn btn-dark rounded-pill px-4 fw-bold shadow-sm">
+            <a href="{{ url_for(reveal_endpoint|default('winner_reveal_overall')) }}" class="btn btn-dark rounded-pill px-4 fw-bold shadow-sm">
                 <i class="fas fa-external-link-alt me-1"></i> Stage Reveal
             </a>
 
             <!-- Dynamic Export Route -->
-            <a href="{{ url_for(export_endpoint|default('export_excel')) }}" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm">
+            <a href="{{ url_for(export_endpoint|default('export_excel_overall')) }}" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm">
                 <i class="fas fa-file-excel me-1"></i> Export Excel Report
             </a>
         </div>
@@ -151,9 +162,11 @@
                         </div>
                         <h3 class="fw-bold mb-1">{{ res['name'] }}</h3>
                         <p class="text-muted small fw-bold text-uppercase mb-3">{{ res['dept'] }}</p>
-                        <div class="score-giant">{{ "%.2f"|format(res['judge_avg'] or 0) }}<small>%</small></div>
+                        <div class="score-giant">
+                            {{ "%.2f"|format(res['final_score'] if active_tab == 'overall' else res['judge_avg'] or 0) }}<small>%</small>
+                        </div>
                         <div class="mt-2 small fw-bold opacity-50">
-                             Total Ballots Cast: {{ res['judge_count'] }}
+                             Ballots / Track status: {{ res['judge_count'] }}
                         </div>
                     </div>
                 </div>
@@ -172,28 +185,34 @@
                 <div class="col-md-7">
                     <p class="small text-muted mb-2 uppercase fw-bold">Calculation Formula</p>
                     <div class="formula-box mb-3">
-                        {% if active_tab == 'general' %}
-                            Total Combined Points ÷ Active Judge Count
+                        {% if active_tab == 'overall' %}
+                            (Round 1 + Costume + Sports + Q&A) ÷ 4
+                        {% elif active_tab == 'general' %}
+                            Total Points ÷ Active Judge Count
                         {% else %}
                             Total Combined Segment Points (Max 100)
                         {% endif %}
                     </div>
                     <p class="small text-muted">
-                        {% if active_tab == 'general' %}
-                            The <strong>Judge Average</strong> is calculated in real-time. The system sums all individual points awarded to a candidate and divides them by the number of judges who have successfully submitted a ballot for that candidate.
+                        {% if active_tab == 'overall' %}
+                            The <strong>Overall Final Score</strong> aggregates the averages of all 4 segments (each graded out of 100%). It sums their final scores and divides by 4 to scale the combined tabulation safely to a final 100% rating.
+                        {% elif active_tab == 'general' %}
+                            The <strong>Round 1 Score</strong> sums all 5 criteria (Max 100) and divides by the judges who submitted a General Show ballot.
                         {% elif active_tab == 'costume' %}
-                            The <strong>Costume Score</strong> averages the sum of Creativity, Theme Relevance, Stage Presence, and Overall Impact (Max 100 points) from all submitted judge ballots.
+                            The <strong>Costume Score</strong> averages the sum of Creativity, Theme Relevance, Stage Presence, and Overall Impact (Max 100) from all submitted costume ballots.
+                        {% elif active_tab == 'sports' %}
+                            The <strong>Sports Attire Score</strong> averages the sum of Confidence/Bearing, Costume Style, Ramp Walk, and Overall Presentation (Max 100) from all submitted sports ballots.
                         {% else %}
-                            The <strong>Sports Attire Score</strong> averages the sum of Confidence/Bearing, Costume Style, Ramp Walk, and Overall Presentation (Max 100 points) from all submitted judge ballots.
+                            The <strong>Q&A Score</strong> averages the sum of Intelligence/Content, Delivery/Wit, and Overall Poise (Max 100) from all submitted Q&A ballots.
                         {% endif %}
                     </p>
                 </div>
                 <div class="col-md-5">
                     <p class="small text-muted mb-2 uppercase fw-bold">Ranking Rules</p>
                     <ul class="small text-muted ps-3">
-                        <li>Ranking is determined <strong>100%</strong> by the final Judge Average of this specific segment.</li>
+                        <li>Ranking is determined <strong>100%</strong> by the final average of this specific segment (or overall aggregate).</li>
                         <li>The system automatically sorts candidates from highest average to lowest.</li>
-                        <li>In the case of a tie, the HR panel may refer to the highest individual judge's score as a tie-breaker.</li>
+                        <li>In the case of a tie, the HR panel may refer to individual scorecard metrics.</li>
                     </ul>
                 </div>
             </div>
@@ -203,13 +222,11 @@
         <div class="table-container mb-5 mt-5">
             <div class="p-4 border-bottom bg-light">
                 <h5 class="mb-0 fw-bold">
-                    Final Tabulation Roster -
-                    {% if active_tab == 'general' %}
-                        Round 1 (General Show)
-                    {% elif active_tab == 'costume' %}
-                        Best in Creative Costume
+                    {% if active_tab == 'overall' %}
+                        Overall Final Tabulation (Combined Categories)
                     {% else %}
-                        Welcome Ramp (Sports Attire)
+                        Final Tabulation Roster -
+                        {% if active_tab == 'general' %}Round 1 (General Show){% elif active_tab == 'costume' %}Best in Creative Costume{% elif active_tab == 'sports' %}Welcome Ramp (Sports Attire){% else %}Q&A Segment{% endif %}
                     {% endif %}
                 </h5>
             </div>
@@ -220,8 +237,15 @@
                             <th class="ps-4">Rank</th>
                             <th>Candidate Name</th>
                             <th>Department</th>
-                            <th class="text-center">Ballots Cast</th>
-                            <th class="text-end pe-4">Judge Average Score</th>
+                            {% if active_tab == 'overall' %}
+                                <th class="text-center">Round 1</th>
+                                <th class="text-center">Costume</th>
+                                <th class="text-center">Sports</th>
+                                <th class="text-center">Q&A</th>
+                            {% else %}
+                                <th class="text-center">Ballots Cast</th>
+                            {% endif %}
+                            <th class="text-end pe-4">{% if active_tab == 'overall' %}Final Combined Score{% else %}Judge Average Score{% endif %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -230,11 +254,20 @@
                             <td class="ps-4 fw-bold">#{{ loop.index }}</td>
                             <td class="fw-bold text-dark">{{ res['name'] }}</td>
                             <td class="text-muted small text-uppercase">{{ res['dept'] }}</td>
-                            <td class="text-center">
-                                <span class="badge bg-light text-dark border px-3 py-2">{{ res['judge_count'] }}</span>
-                            </td>
+
+                            {% if active_tab == 'overall' %}
+                                <td class="text-center text-secondary small fw-bold">{{ "%.2f"|format(res['r1']) }}%</td>
+                                <td class="text-center text-secondary small fw-bold">{{ "%.2f"|format(res['costume']) }}%</td>
+                                <td class="text-center text-secondary small fw-bold">{{ "%.2f"|format(res['sports']) }}%</td>
+                                <td class="text-center text-secondary small fw-bold">{{ "%.2f"|format(res['qa']) }}%</td>
+                            {% else %}
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark border px-3 py-2">{{ res['judge_count'] }}</span>
+                                </td>
+                            {% endif %}
+
                             <td class="text-end pe-4 fw-bold text-primary fs-5">
-                                {{ "%.2f"|format(res['judge_avg'] or 0) }}%
+                                {{ "%.2f"|format(res['final_score'] if active_tab == 'overall' else res['judge_avg']) }}%
                             </td>
                         </tr>
                         {% endfor %}
@@ -316,17 +349,21 @@
             </div>
 
             <!-- Dynamic Wipe Action Endpoints -->
-            <form action="{{ url_for(wipe_endpoint|default('wipe_scores')) }}" method="POST">
+            <form action="{{ url_for(wipe_endpoint|default('wipe_scores_overall')) }}" method="POST">
                 <div class="modal-body p-4 text-center">
                     <p class="text-muted mb-4">
                         Wipe all scores for
                         <strong>
-                            {% if active_tab == 'general' %}
+                            {% if active_tab == 'overall' %}
+                                All Scored Rounds (Overall System Reset)
+                            {% elif active_tab == 'general' %}
                                 Round 1 (General Show)
                             {% elif active_tab == 'costume' %}
                                 Creative Costume Segment
-                            {% else %}
+                            {% elif active_tab == 'sports' %}
                                 Sports Attire Segment
+                            {% else %}
+                                Q&A Segment
                             {% endif %}
                         </strong>? This action cannot be undone.
                     </p>
