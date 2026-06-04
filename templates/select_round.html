@@ -69,17 +69,6 @@
         border: none;
     }
 
-    .btn-round-r1 {
-        background: #f5f5f7;
-        color: #1d1d1f !important;
-        border: 1px solid rgba(0,0,0,0.05);
-    }
-
-    .btn-round-r1:hover {
-        background: #e5e5ea;
-        transform: translateY(-3px);
-    }
-
     .btn-round-costume {
         background: #1d1d1f;
         color: white !important;
@@ -113,6 +102,17 @@
         transform: translateY(-3px);
     }
 
+    .btn-round-talent {
+        background: #28a745;
+        color: white !important;
+        box-shadow: 0 10px 20px rgba(40, 167, 69, 0.2);
+    }
+
+    .btn-round-talent:hover {
+        background: #218838;
+        transform: translateY(-3px);
+    }
+
     .btn-exit {
         margin-top: 15px;
         color: #86868b;
@@ -140,10 +140,8 @@
         Choose which category segment you wish to score or review at this moment.
     </p>
 
+    <!-- General Show Round completely removed from selection group -->
     <div class="mb-4">
-        <a href="{{ url_for('judge_index') }}" class="btn-round btn-round-r1">
-            Round 1: General Show
-        </a>
         <a href="{{ url_for('judge_index_costume') }}" class="btn-round btn-round-costume">
             Creative Costume
         </a>
@@ -152,6 +150,9 @@
         </a>
         <a href="{{ url_for('judge_index_qa') }}" class="btn-round btn-round-qa">
             Q&A Segment
+        </a>
+        <a href="{{ url_for('judge_index_talent') }}" class="btn-round btn-round-talent">
+            Best Talent Round
         </a>
     </div>
 
