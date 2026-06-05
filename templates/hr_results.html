@@ -91,14 +91,13 @@
             <div class="d-flex flex-wrap justify-content-center justify-content-md-start align-items-center gap-2 mt-2">
                 <span class="badge bg-success rounded-pill px-3 py-2">LIVE DATA</span>
 
-                <!-- 7-Way Tab Selector -->
+                <!-- 6-Way Tab Selector (Talent removed) -->
                 <div class="ms-md-2 d-inline-flex flex-wrap gap-1 bg-white p-1 rounded-pill border shadow-sm">
                     <a href="/hr-results/overall" class="btn btn-sm {% if active_tab == 'overall' %}btn-dark{% else %}btn-outline-secondary border-0{% endif %} rounded-pill px-3 py-1 fw-bold">Overall Final</a>
                     <a href="/hr-results/general" class="btn btn-sm {% if active_tab == 'general' %}btn-dark{% else %}btn-outline-secondary border-0{% endif %} rounded-pill px-3 py-1 fw-bold">General Show</a>
                     <a href="/hr-results/costume" class="btn btn-sm {% if active_tab == 'costume' %}btn-dark{% else %}btn-outline-secondary border-0{% endif %} rounded-pill px-3 py-1 fw-bold">Creative Costume</a>
                     <a href="/hr-results/sports" class="btn btn-sm {% if active_tab == 'sports' %}btn-dark{% else %}btn-outline-secondary border-0{% endif %} rounded-pill px-3 py-1 fw-bold">Sports Attire</a>
                     <a href="/hr-results/qa" class="btn btn-sm {% if active_tab == 'qa' %}btn-dark{% else %}btn-outline-secondary border-0{% endif %} rounded-pill px-3 py-1 fw-bold">Q&A Segment</a>
-                    <a href="/hr-results/talent" class="btn btn-sm {% if active_tab == 'talent' %}btn-dark{% else %}btn-outline-secondary border-0{% endif %} rounded-pill px-3 py-1 fw-bold">Best Talent</a>
                     <a href="/hr-results/viber" class="btn btn-sm {% if active_tab == 'viber' %}btn-dark{% else %}btn-outline-secondary border-0{% endif %} rounded-pill px-3 py-1 fw-bold">Viber Poll</a>
                 </div>
             </div>
@@ -183,7 +182,7 @@
                     <p class="small text-muted mb-2 uppercase fw-bold">Calculation Formula</p>
                     <div class="formula-box mb-3">
                         {% if active_tab == 'overall' %}
-                            (Round 1 + Costume + Sports + Q&A + Talent + Viber %) ÷ 6
+                            (Judged Average × 0.90) + (Viber % × 0.10)
                         {% elif active_tab == 'general' %}
                             Total Points ÷ Active Judge Count
                         {% elif active_tab == 'viber' %}
@@ -194,7 +193,7 @@
                     </div>
                     <p class="small text-muted">
                         {% if active_tab == 'overall' %}
-                            The <strong>Overall Final Score</strong> aggregates 6 categories (5 judged rounds + 1 scaled Viber popularity percentage) and divides by 6 to yield the combined 100% final rating.
+                            The <strong>Overall Final Score</strong> is calculated with a weighted formula. The 4 judged categories (Round 1, Costume, Sports, and Q&A) are averaged to form **90%** of the final score, while the Viber Popularity Poll accounts for the remaining **10%** of the overall tabulation.
                         {% elif active_tab == 'general' %}
                             The <strong>Round 1 Score</strong> sums all 5 criteria (Max 100) and averages them based on active judges.
                         {% elif active_tab == 'costume' %}
@@ -203,8 +202,6 @@
                             The <strong>Sports Attire Score</strong> averages the sum of Bearing, Costume Style, Ramp Walk, and Overall Presentation (Max 100).
                         {% elif active_tab == 'qa' %}
                             The <strong>Q&A Score</strong> averages the sum of Intelligence/Content, Delivery/Wit, and Overall Poise (Max 100).
-                        {% elif active_tab == 'talent' %}
-                            The <strong>Best Talent Score</strong> averages the sum of Performance/Skill, Creativity/Originality, and Stage Presence (Max 100).
                         {% else %}
                             The <strong>Viber Popularity Score</strong> scales manually entered raw counts relative to the total vote counts across all candidates to yield a score out of 100%.
                         {% endif %}
@@ -228,7 +225,7 @@
                         Overall Final Tabulation (Combined Categories)
                     {% else %}
                         Final Tabulation Roster -
-                        {% if active_tab == 'general' %}Round 1 (General Show){% elif active_tab == 'costume' %}Best in Creative Costume{% elif active_tab == 'sports' %}Welcome Ramp (Sports Attire){% elif active_tab == 'qa' %}Q&A Segment{% elif active_tab == 'talent' %}Best Talent Segment{% else %}Viber Popularity Poll{% endif %}
+                        {% if active_tab == 'general' %}Round 1 (General Show){% elif active_tab == 'costume' %}Best in Creative Costume{% elif active_tab == 'sports' %}Welcome Ramp (Sports Attire){% elif active_tab == 'qa' %}Q&A Segment{% else %}Viber Popularity Poll{% endif %}
                     {% endif %}
                 </h5>
             </div>
@@ -244,7 +241,6 @@
                                 <th class="text-center">Costume</th>
                                 <th class="text-center">Sports</th>
                                 <th class="text-center">Q&A</th>
-                                <th class="text-center">Talent</th>
                                 <th class="text-center">Viber %</th>
                             {% elif active_tab == 'viber' %}
                                 <th class="text-center">Raw Votes</th>
@@ -267,7 +263,6 @@
                                 <td class="text-center text-secondary small fw-bold">{{ "%.2f"|format(res['costume']) }}%</td>
                                 <td class="text-center text-secondary small fw-bold">{{ "%.2f"|format(res['sports']) }}%</td>
                                 <td class="text-center text-secondary small fw-bold">{{ "%.2f"|format(res['qa']) }}%</td>
-                                <td class="text-center text-secondary small fw-bold">{{ "%.2f"|format(res['talent']) }}%</td>
                                 <td class="text-center text-secondary small fw-bold">{{ "%.2f"|format(res['viber_percentage']) }}%</td>
                             {% elif active_tab == 'viber' %}
                                 <td class="text-center text-secondary small fw-bold">{{ res['viber_votes'] }}</td>
@@ -335,7 +330,7 @@
                         <tbody>
                             {% for j in all_judges %}
                             <tr>
-                                <td class="ps-4 fw-bold py-3 text-dark">{{ j.name }}</td>
+                                <td class="ps-4 py-3 text-dark fw-bold">{{ j.name }}</td>
                                 <td class="text-end pe-4">
                                     <form action="/hr/delete-judge/{{ j.id }}" method="POST" onsubmit="return confirm('Delete judge?');">
                                         <button type="submit" class="btn btn-sm text-danger border-0 bg-transparent"><i class="fas fa-times"></i></button>
@@ -376,8 +371,6 @@
                                 Sports Attire Segment
                             {% elif active_tab == 'qa' %}
                                 Q&A Segment
-                            {% elif active_tab == 'talent' %}
-                                Best Talent Segment
                             {% else %}
                                 Viber Popularity Poll
                             {% endif %}
