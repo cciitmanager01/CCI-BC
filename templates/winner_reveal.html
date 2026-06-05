@@ -79,12 +79,13 @@
     }
     .score-display small { font-size: 1rem; opacity: 0.7; margin-left: 5px; }
 
-    /* SUMMARY GRID (Step 6) */
+    /* SUMMARY GRID (Adjusted for Top 3) */
     .finalist-grid {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 15px;
-        width: 95%;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        width: 90%;
+        max-width: 900px;
         margin-top: 40px;
     }
 
@@ -132,33 +133,9 @@
 
     <!-- START STATE -->
     <div id="step0" class="reveal-box reveal-active">
-        <h1 style="font-size: 5rem; font-weight: 900;">TOP 5 FINALISTS</h1>
-        <p class="rank-label" style="color: white; opacity: 0.6;">Advancing to Round 2</p>
-        <button onclick="showStep(5)" class="btn-reveal">Begin Countdown</button>
-    </div>
-
-    <!-- 5TH PLACE -->
-    <div id="step5" class="reveal-box">
-        <span class="rank-label">Finalist #5</span>
-        <h2 class="winner-name">{{ winners[4].name if winners|length > 4 else "---" }}</h2>
-        <p class="winner-dept">{{ winners[4].dept if winners|length > 4 else "" }}</p>
-        <div class="score-display">
-            {{ "%.2f"|format(winners[4].judge_avg or 0) if winners|length > 4 else "0.00" }}<small>%</small>
-        </div>
-        <br>
-        <button onclick="showStep(4)" class="btn-reveal">Reveal #4</button>
-    </div>
-
-    <!-- 4TH PLACE -->
-    <div id="step4" class="reveal-box">
-        <span class="rank-label">Finalist #4</span>
-        <h2 class="winner-name">{{ winners[3].name if winners|length > 3 else "---" }}</h2>
-        <p class="winner-dept">{{ winners[3].dept if winners|length > 3 else "" }}</p>
-        <div class="score-display">
-            {{ "%.2f"|format(winners[3].judge_avg or 0) if winners|length > 3 else "0.00" }}<small>%</small>
-        </div>
-        <br>
-        <button onclick="showStep(3)" class="btn-reveal">Reveal #3</button>
+        <h1 style="font-size: 5rem; font-weight: 900;">TOP 3 FINALISTS</h1>
+        <p class="rank-label" style="color: white; opacity: 0.6;">The Final Podium</p>
+        <button onclick="showStep(3)" class="btn-reveal">Begin Countdown</button>
     </div>
 
     <!-- 3RD PLACE -->
@@ -167,7 +144,7 @@
         <h2 class="winner-name">{{ winners[2].name if winners|length > 2 else "---" }}</h2>
         <p class="winner-dept">{{ winners[2].dept if winners|length > 2 else "" }}</p>
         <div class="score-display">
-            {{ "%.2f"|format(winners[2].judge_avg or 0) if winners|length > 2 else "0.00" }}<small>%</small>
+            {{ "%.2f"|format(winners[2].final_score or winners[2].judge_avg or 0) if winners|length > 2 else "0.00" }}<small>%</small>
         </div>
         <br>
         <button onclick="showStep(2)" class="btn-reveal">Reveal #2</button>
@@ -179,35 +156,37 @@
         <h2 class="winner-name">{{ winners[1].name if winners|length > 1 else "---" }}</h2>
         <p class="winner-dept">{{ winners[1].dept if winners|length > 1 else "" }}</p>
         <div class="score-display">
-            {{ "%.2f"|format(winners[1].judge_avg or 0) if winners|length > 1 else "0.00" }}<small>%</small>
+            {{ "%.2f"|format(winners[1].final_score or winners[1].judge_avg or 0) if winners|length > 1 else "0.00" }}<small>%</small>
         </div>
         <br>
-        <button onclick="showStep(1)" class="btn-reveal">Top Qualifier</button>
+        <button onclick="showStep(1)" class="btn-reveal">Reveal Winner</button>
     </div>
 
-    <!-- 1ST PLACE -->
+    <!-- 1ST PLACE (WINNER) -->
     <div id="step1" class="reveal-box">
-        <span class="rank-label" style="color: white;">Highest Score Qualifier</span>
+        <span class="rank-label" style="color: white;">Winner / 1st Place</span>
         <h2 class="winner-name" style="color: #D4AF37;">{{ winners[0].name if winners|length > 0 else "---" }}</h2>
         <p class="winner-dept">{{ winners[0].dept if winners|length > 0 else "" }}</p>
         <div class="score-display" style="background: #D4AF37; color: black; box-shadow: 0 0 50px rgba(212,175,55,0.5);">
-            {{ "%.2f"|format(winners[0].judge_avg or 0) if winners|length > 0 else "0.00" }}<small style="color: black;">%</small>
+            {{ "%.2f"|format(winners[0].final_score or winners[0].judge_avg or 0) if winners|length > 0 else "0.00" }}<small style="color: black;">%</small>
         </div>
         <br>
-        <button onclick="showStep(6)" class="btn-reveal">Show Finalist Summary</button>
+        <button onclick="showStep(4)" class="btn-reveal">Show Finalist Summary</button>
     </div>
 
-    <!-- STEP 6: SUMMARY GRID -->
-    <div id="step6" class="reveal-box">
-        <h1 style="font-weight: 900; letter-spacing: -2px; font-size: 3rem; margin-bottom: 0;">OFFICIAL TOP 5</h1>
-        <p class="rank-label" style="font-size: 0.9rem; letter-spacing: 5px; opacity: 0.6;">Round 1 Tabulation Results</p>
+    <!-- STEP 4: SUMMARY GRID -->
+    <div id="step4" class="reveal-box">
+        <h1 style="font-weight: 900; letter-spacing: -2px; font-size: 3rem; margin-bottom: 0;">OFFICIAL TOP 3</h1>
+        <p class="rank-label" style="font-size: 0.9rem; letter-spacing: 5px; opacity: 0.6;">Final Tabulation Results</p>
 
         <div class="finalist-grid">
-            {% for i in range(5) %}
+            {% for i in range(3) %}
             <div class="finalist-card">
                 <p style="font-size: 0.7rem; margin:0; letter-spacing: 2px;">RANK #{{ i+1 }}</p>
                 <h4>{{ winners[i].name if winners|length > i else "---" }}</h4>
-                <div class="mini-score">{{ "%.2f"|format(winners[i].judge_avg or 0) if winners|length > i else "0.00" }}%</div>
+                <div class="mini-score">
+                    {{ "%.2f"|format(winners[i].final_score or winners[i].judge_avg or 0) if winners|length > i else "0.00" }}%
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -233,7 +212,8 @@
             target.classList.add('reveal-active');
         }, 20);
 
-        if (s === 5) {
+        // Fullscreen activation triggers on Step 3 (the first countdown step)
+        if (s === 3) {
             if (document.documentElement.requestFullscreen) { document.documentElement.requestFullscreen(); }
         }
     }
