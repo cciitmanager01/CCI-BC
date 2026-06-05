@@ -47,12 +47,6 @@ CATEGORIES_QA = {
     3: {'name': 'Overall Impact & Poise', 'max': 20, 'field': 'impact'}
 }
 
-CATEGORIES_TALENT = {
-    1: {'name': 'Performance & Skill', 'max': 40, 'field': 'performance'},
-    2: {'name': 'Creativity & Originality', 'max': 40, 'field': 'creativity'},
-    3: {'name': 'Stage Presence & Impact', 'max': 20, 'field': 'impact'}
-}
-
 
 # --- MODELS ---
 class Candidate(db.Model):
@@ -120,19 +114,7 @@ class ScoreQA(db.Model):
     total_score = db.Column(db.Float, default=0.0)
 
 
-# Table 5: Best Talent
-class ScoreTalent(db.Model):
-    __tablename__ = 'hr_scores_talent'
-    id = db.Column(db.Integer, primary_key=True)
-    candidate_id = db.Column(db.Integer, db.ForeignKey('hr_candidates.id'))
-    judge_name = db.Column(db.String(100))
-    performance = db.Column(db.Float, default=0.0)
-    creativity = db.Column(db.Float, default=0.0)
-    impact = db.Column(db.Float, default=0.0)
-    total_score = db.Column(db.Float, default=0.0)
-
-
-# Table 6: Viber Manual Entry Poll
+# Table 5: Viber Manual Entry Poll
 class ViberPoll(db.Model):
     __tablename__ = 'hr_viber_polls'
     candidate_id = db.Column(db.Integer, db.ForeignKey('hr_candidates.id'), primary_key=True)
@@ -408,58 +390,6 @@ def score_category_qa(cat_id):
                            candidates=candidates, existing_scores=existing_scores, back_endpoint='judge_index_qa')
 
 
-# --- SEGMENT 5: BEST TALENT ---
-
-@app.route('/judge/talent/dashboard')
-def judge_index_talent():
-    if session.get('role') != 'judge' or not session.get('judge_name'):
-        return redirect(url_for('login'))
-
-    judge_name = session.get('judge_name')
-    total_candidates = Candidate.query.count() or 1
-
-    progress = {}
-    for i, cat in CATEGORIES_TALENT.items():
-        field = getattr(ScoreTalent, cat['field'])
-        count = ScoreTalent.query.filter(ScoreTalent.judge_name == judge_name, field > 0).count()
-        progress[i] = {'name': cat['name'], 'count': count, 'total': total_candidates}
-
-    return render_template('judge_index.html', progress=progress, round_title="Best Talent Round",
-                           score_endpoint='score_category_talent')
-
-
-@app.route('/judge/talent/category/<int:cat_id>', methods=['GET', 'POST'])
-def score_category_talent(cat_id):
-    if session.get('role') != 'judge' or not session.get('judge_name'):
-        return redirect(url_for('login'))
-
-    cat = CATEGORIES_TALENT.get(cat_id)
-    judge_name = session.get('judge_name')
-    candidates = Candidate.query.all()
-
-    if request.method == 'POST':
-        for can in candidates:
-            val = float(request.form.get(str(can.id), 0))
-            score_row = ScoreTalent.query.filter_by(candidate_id=can.id, judge_name=judge_name).first()
-            if not score_row:
-                score_row = ScoreTalent(candidate_id=can.id, judge_name=judge_name)
-                db.session.add(score_row)
-
-            setattr(score_row, cat['field'], val)
-            score_row.total_score = (score_row.performance or 0) + (score_row.creativity or 0) + \
-                                    (score_row.impact or 0)
-
-        db.session.commit()
-        flash(f"Scores for {cat['name']} saved!", "success")
-        return redirect(url_for('judge_index_talent'))
-
-    existing_scores = {s.candidate_id: getattr(s, cat['field'])
-                       for s in ScoreTalent.query.filter_by(judge_name=judge_name).all()}
-
-    return render_template('score_category.html', cat=cat, cat_id=cat_id,
-                           candidates=candidates, existing_scores=existing_scores, back_endpoint='judge_index_talent')
-
-
 # --- HR DASHBOARDS ---
 
 @app.route('/hr-results')
@@ -563,25 +493,6 @@ def hr_results_qa():
                            wipe_endpoint='wipe_scores_qa')
 
 
-@app.route('/hr-results/talent')
-def hr_results_talent():
-    if session.get('role') != 'hr': return redirect(url_for('login'))
-
-    results = get_tabulated_results_talent()
-    all_candidates = Candidate.query.order_by(Candidate.name).all()
-    all_judges = Judge.query.order_by(Judge.name).all()
-
-    return render_template('hr_results.html',
-                           results=results,
-                           all_candidates=all_candidates,
-                           all_judges=all_judges,
-                           total_emp_votes=0,
-                           active_tab='talent',
-                           reveal_endpoint='winner_reveal_talent',
-                           export_endpoint='export_excel_talent',
-                           wipe_endpoint='wipe_scores_talent')
-
-
 @app.route('/hr-results/viber')
 def hr_results_viber():
     if session.get('role') != 'hr': return redirect(url_for('login'))
@@ -656,7 +567,6 @@ def delete_candidate(id):
     ScoreCostume.query.filter_by(candidate_id=id).delete()
     ScoreSports.query.filter_by(candidate_id=id).delete()
     ScoreQA.query.filter_by(candidate_id=id).delete()
-    ScoreTalent.query.filter_by(candidate_id=id).delete()
     ViberPoll.query.filter_by(candidate_id=id).delete()
     EmployeeVote.query.filter_by(candidate_id=id).delete()
     db.session.delete(Candidate.query.get_or_404(id))
@@ -672,7 +582,6 @@ def delete_judge(id):
     ScoreCostume.query.filter_by(judge_name=judge.name).delete()
     ScoreSports.query.filter_by(judge_name=judge.name).delete()
     ScoreQA.query.filter_by(judge_name=judge.name).delete()
-    ScoreTalent.query.filter_by(judge_name=judge.name).delete()
     db.session.delete(judge)
     db.session.commit()
     return redirect(url_for('hr_results'))
@@ -721,16 +630,6 @@ def wipe_scores_qa():
     return redirect(url_for('hr_results_qa'))
 
 
-@app.route('/hr/talent/wipe-scores', methods=['POST'])
-def wipe_scores_talent():
-    if session.get('role') != 'hr': return redirect(url_for('login'))
-    if request.form.get('wipe_password') == 'hr@55':
-        db.session.query(ScoreTalent).delete()
-        db.session.commit()
-        flash("All Talent Segment scores wiped!", "success")
-    return redirect(url_for('hr_results_talent'))
-
-
 @app.route('/hr/viber/wipe-scores', methods=['POST'])
 def wipe_scores_viber():
     if session.get('role') != 'hr': return redirect(url_for('login'))
@@ -749,7 +648,6 @@ def wipe_scores_overall():
         db.session.query(ScoreCostume).delete()
         db.session.query(ScoreSports).delete()
         db.session.query(ScoreQA).delete()
-        db.session.query(ScoreTalent).delete()
         db.session.query(ViberPoll).delete()
         db.session.query(EmployeeVote).delete()
         db.session.commit()
@@ -784,13 +682,6 @@ def winner_reveal_sports():
 def winner_reveal_qa():
     if session.get('role') != 'hr': return redirect(url_for('login'))
     results = get_tabulated_results_qa()
-    return render_template('winner_reveal.html', winners=results)
-
-
-@app.route('/hr/talent/reveal')
-def winner_reveal_talent():
-    if session.get('role') != 'hr': return redirect(url_for('login'))
-    results = get_tabulated_results_talent()
     return render_template('winner_reveal.html', winners=results)
 
 
@@ -1035,61 +926,6 @@ def export_excel_qa():
     return generate_download(wb, "Binibining_Coolaire_2026_QA_Tabulations.xlsx")
 
 
-@app.route('/hr/talent/export-excel')
-def export_excel_talent():
-    if session.get('role') != 'hr': return redirect(url_for('login'))
-
-    wb = Workbook()
-    ws1 = wb.active
-    ws1.title = "Talent Tabulation"
-
-    headers1 = [
-        "Rank", "Candidate Name", "Department",
-        "Avg Performance & Skill (Max 40)", "Avg Creativity & Originality (Max 40)",
-        "Avg Stage Presence & Impact (Max 20)",
-        "Final Score (Avg Total)", "Judges Count"
-    ]
-    ws1.append(headers1)
-
-    results = get_tabulated_results_talent()
-    for rank, res in enumerate(results, start=1):
-        scores = ScoreTalent.query.filter_by(candidate_id=res['id']).all()
-        judge_count = len(scores)
-
-        if judge_count > 0:
-            avg_pe = sum(s.performance or 0.0 for s in scores) / judge_count
-            avg_cr = sum(s.creativity or 0.0 for s in scores) / judge_count
-            avg_im = sum(s.impact or 0.0 for s in scores) / judge_count
-        else:
-            avg_pe = avg_cr = avg_im = 0.0
-
-        ws1.append([
-            rank, res['name'], res['dept'],
-            round(avg_pe, 2), round(avg_cr, 2), round(avg_im, 2),
-            res['final_score'], res['judge_count']
-        ])
-
-    ws2 = wb.create_sheet(title="Talent Detailed Ballots")
-    headers2 = [
-        "Candidate Name", "Department", "Judge Name",
-        "Performance & Skill", "Creativity & Originality",
-        "Stage Presence & Impact", "Total Score"
-    ]
-    ws2.append(headers2)
-
-    all_scores = db.session.query(
-        Candidate.name, Candidate.department, ScoreTalent.judge_name,
-        ScoreTalent.performance, ScoreTalent.creativity, ScoreTalent.impact,
-        ScoreTalent.total_score
-    ).join(ScoreTalent, Candidate.id == ScoreTalent.candidate_id).order_by(Candidate.name, ScoreTalent.judge_name).all()
-
-    for s in all_scores:
-        ws2.append([s[0], s[1], s[2], s[3], s[4], s[5], s[6]])
-
-    format_sheets(wb, [ws1, ws2])
-    return generate_download(wb, "Binibining_Coolaire_2026_Talent_Tabulations.xlsx")
-
-
 @app.route('/hr/viber/export-excel')
 def export_excel_viber():
     if session.get('role') != 'hr': return redirect(url_for('login'))
@@ -1127,7 +963,6 @@ def export_excel_overall():
         "Creative Costume Avg %",
         "Sports Attire Avg %",
         "Q&A Segment Avg %",
-        "Best Talent Avg %",
         "Viber Popularity Poll %",
         "Final Combined Score (Avg Total %)"
     ]
@@ -1137,7 +972,7 @@ def export_excel_overall():
     for rank, res in enumerate(results, start=1):
         ws1.append([
             rank, res['name'], res['dept'],
-            res['r1'], res['costume'], res['sports'], res['qa'], res['talent'],
+            res['r1'], res['costume'], res['sports'], res['qa'],
             res['viber_percentage'], res['final_score']
         ])
 
@@ -1352,35 +1187,12 @@ def get_tabulated_results_qa():
     return processed
 
 
-def get_tabulated_results_talent():
-    raw_data = db.session.query(
-        Candidate.id, Candidate.name, Candidate.department,
-        func.avg(ScoreTalent.total_score).label('judge_avg'),
-        func.count(func.distinct(ScoreTalent.judge_name)).label('judge_count')
-    ).join(ScoreTalent, isouter=True).group_by(Candidate.id).all()
-
-    processed = []
-    for r in raw_data:
-        can_id = r[0]
-        j_avg = float(r[3]) if r[3] is not None else 0.0
-
-        processed.append({
-            'id': can_id, 'name': r[1], 'dept': r[2],
-            'judge_avg': round(j_avg, 2), 'judge_count': r[4],
-            'final_score': round(j_avg, 2)
-        })
-
-    processed.sort(key=lambda x: x['judge_avg'], reverse=True)
-    return processed
-
-
 def get_tabulated_results_viber():
     raw_data = db.session.query(
         Candidate.id, Candidate.name, Candidate.department,
         func.coalesce(ViberPoll.votes, 0).label('viber_votes')
     ).join(ViberPoll, Candidate.id == ViberPoll.candidate_id, isouter=True).order_by(text('viber_votes DESC')).all()
 
-    # Proportional percentage calculation for Viber display tab
     total_votes = sum(r[3] for r in raw_data) or 1
 
     processed = []
@@ -1405,7 +1217,6 @@ def get_tabulated_results_overall():
     costume_dict = {item['id']: item['judge_avg'] for item in get_tabulated_results_costume()}
     sports_dict = {item['id']: item['judge_avg'] for item in get_tabulated_results_sports()}
     qa_dict = {item['id']: item['judge_avg'] for item in get_tabulated_results_qa()}
-    talent_dict = {item['id']: item['judge_avg'] for item in get_tabulated_results_talent()}
 
     # Calculate Viber total votes to derive proportional percentage scaling
     viber_votes_dict = {vp.candidate_id: vp.votes for vp in ViberPoll.query.all()}
@@ -1417,18 +1228,18 @@ def get_tabulated_results_overall():
         costume = costume_dict.get(c.id, 0.0)
         sports = sports_dict.get(c.id, 0.0)
         qa = qa_dict.get(c.id, 0.0)
-        talent = talent_dict.get(c.id, 0.0)
 
-        # Relative Proportional % of the Popularity Votes (Candidate Votes / Total Votes) * 100
+        # Proportional percentage of the popularity votes (Candidate Votes / Total Votes) * 100
         raw_votes = viber_votes_dict.get(c.id, 0)
         viber_percentage = (raw_votes / total_viber_votes) * 100.0
 
-        # 6 segments aggregated (5 judged rounds + 1 proportional voter poll) divided by 6
-        final_score = (r1 + costume + sports + qa + talent + viber_percentage) / 6.0
+        # New Weighted calculation: 90% Judged Average, 10% Viber Popularity
+        judged_avg = (r1 + costume + sports + qa) / 4.0
+        final_score = (judged_avg * 0.90) + (viber_percentage * 0.10)
 
         processed.append({
             'id': c.id, 'name': c.name, 'dept': c.department,
-            'r1': r1, 'costume': costume, 'sports': sports, 'qa': qa, 'talent': talent,
+            'r1': r1, 'costume': costume, 'sports': sports, 'qa': qa,
             'viber_votes': raw_votes,
             'viber_percentage': round(viber_percentage, 2),
             'final_score': round(final_score, 2),
